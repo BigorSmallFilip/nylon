@@ -1,0 +1,33 @@
+
+types:
+int			420
+float		3.0000001
+string		'wow dude\n'
+array		[1, 'mez', 4.4]		vector
+list		L[30, 10, 3.23]		doubly linked list
+
+dictionary
+
+
+
+Getting data from Nylon in C:
+
+Ny_Object* obj = Ny_GetGlobal(state, "settings");
+Ny_Object* resolution = Ny_GetMember(obj, "resolution");
+Ny_Int width, height;
+Ny_GetInt2Tuple(resolution, &width, &height);
+
+
+function testing(something, num: int) {
+	for (i in 10..9) {
+		
+	}
+}
+
+
+
+if (true) {
+	print(1)
+} else {
+	print('ass')
+}
