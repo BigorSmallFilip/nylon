@@ -45,4 +45,3 @@ void Ny_PushStateMessage(
 void Ny_PrintStateMessage(Ny_StateMessage* msg)
 {
 }
-

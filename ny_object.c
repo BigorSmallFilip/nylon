@@ -58,4 +58,3 @@ void Ny_PrintObject(const Ny_Object* obj)
 		break;
 	}
 }
-

@@ -175,4 +175,3 @@ char* Ny_CopyCutString(const char* srcstring, size_t start, size_t length)
 	str[length] = '\0';
 	return str;
 }
-
