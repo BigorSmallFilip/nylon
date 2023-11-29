@@ -398,3 +398,4 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 
 	return NULL;
 }
+
