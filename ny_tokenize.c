@@ -454,5 +454,9 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		}
 	}
 
+	/* Last token in file gets the lastonline flag set */
+	Ny_Token* lasttoken = Ny_VectorBack(parser->tokens, Ny_Token*);
+	if (lasttoken) lasttoken->lastonline = Ny_TRUE;
+
 	return parser;
 }

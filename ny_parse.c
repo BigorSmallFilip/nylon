@@ -112,9 +112,9 @@ static Ny_Bool parse_operator(
 {
 	Ny_ExprNode* node = create_exprnode(Ny_ET_OPERATOR);
 	node->op = token->operatorid;
-	
+
 	Ny_ExprNode* stacktop;
-	if (Ny_IsAssignmentOp(node->op) || !(stacktop = Ny_VectorPBack(operatorstack, Ny_ExprNode*)))
+	if (/*Ny_IsAssignmentOp(node->op) || */!(stacktop = Ny_VectorPBack(operatorstack, Ny_ExprNode*)))
 	{
 		Ny_PushBackVector(operatorstack, node);
 	} else if (Ny_OpPrecedence(node->op) > Ny_OpPrecedence(stacktop->op))
@@ -139,9 +139,11 @@ static Ny_Bool parse_operator(
 		}
 	} else
 	{
-		/* Lesser than equal */
+		/* Lesser than or equal equal precedence */
 		while (stacktop = Ny_VectorPBack(operatorstack, Ny_ExprNode*))
 		{
+			if (Ny_IsAssignmentOp(node->op) && Ny_IsAssignmentOp(stacktop->op)) break;
+
 			if (Ny_OpPrecedence(stacktop->op) >= Ny_OpPrecedence(node->op))
 			{
 				Ny_PopBackVector(operatorstack);
@@ -225,7 +227,7 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 		}
 
 		/* Print the expression as it is right now */
-		/*printf("Expression: ");
+		printf("Expression: ");
 		for (int i = 0; i < expr->nodes.count; i++)
 		{
 			Ny_PrintExprNode(expr->nodes.buffer[i]);
@@ -238,7 +240,7 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 			Ny_PrintExprNode(operatorstack.buffer[i]);
 			printf(", ");
 		}
-		printf("\n\n");*/
+		printf("\n\n");
 	}
 
 	/* Put all operators left in the stack in the expression */
@@ -266,6 +268,15 @@ static Ny_Expression* parse_expression(Ny_ParserState* parser, Ny_Bool endline)
 {
 	Ny_Expression* expr = Ny_AllocType(Ny_Expression);
 	parse_subexpression(parser, expr, endline);
+
+	printf("---final expression: ");
+	for (int i = 0; i < expr->nodes.count; i++)
+	{
+		Ny_PrintExprNode(expr->nodes.buffer[i]);
+		printf(", ");
+	}
+	putchar('\n');
+
 	return expr;
 }
 

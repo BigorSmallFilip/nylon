@@ -82,11 +82,11 @@ extern const unsigned char ny_operator_precedence[Ny_NUM_OPERATORS];
 */
 Ny_OperatorID Ny_GetOperator(const char* string);
 
-#define Ny_IsAssignmentOp(op)   ((op) >= Ny_OP_ASSIGN   || (op) <= Ny_OP_ASSIGNDIV)
-#define Ny_IsLogicalOp(op)      ((op) >= Ny_OP_NOT      || (op) <= Ny_OP_XOR)
-#define Ny_IsRelationalOp(op)   ((op) >= Ny_OP_EQUALITY || (op) <= Ny_OP_GREATEREQUAL)
-#define Ny_IsArithmeticOp(op)   ((op) >= Ny_OP_ADD      || (op) <= Ny_OP_DIV)
-#define Ny_IsUnaryOp(op)        ((op) == Ny_OP_NOT      || (op) == Ny_OP_NEGATIVE)
+#define Ny_IsAssignmentOp(op)   ((op) >= Ny_OP_ASSIGN   && (op) <= Ny_OP_ASSIGNDIV)
+#define Ny_IsLogicalOp(op)      ((op) >= Ny_OP_NOT      && (op) <= Ny_OP_XOR)
+#define Ny_IsRelationalOp(op)   ((op) >= Ny_OP_EQUALITY && (op) <= Ny_OP_GREATEREQUAL)
+#define Ny_IsArithmeticOp(op)   ((op) >= Ny_OP_ADD      && (op) <= Ny_OP_MOD)
+#define Ny_IsUnaryOp(op)        ((op) == Ny_OP_NOT      && (op) == Ny_OP_NEGATIVE)
 
 
 
@@ -131,9 +131,11 @@ enum
 typedef char Ny_ExprNodeType;
 extern const char* ny_exprnodetype_names[Ny_NUM_EXPRNODETYPES];
 
-typedef struct
+typedef struct Ny_ExprNode
 {
 	Ny_ExprNodeType type;
+	struct Ny_ExprNode* left; /* Left child */
+	struct Ny_ExprNode* right; /* Right child */
 	union
 	{
 		Ny_OperatorID op;
