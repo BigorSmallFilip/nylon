@@ -157,6 +157,7 @@ typedef struct Ny_ExprNode
 typedef struct
 {
 	Ny_Vector nodes;
+	Ny_ExprNode* topnode;
 } Ny_Expression;
 
 void Ny_PrintExprNode(const Ny_ExprNode* node);

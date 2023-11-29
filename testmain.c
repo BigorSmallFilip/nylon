@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 	
 	Ny_State* state = Ny_CreateState();
 
-	Ny_ParseSourceCode(state, "a.m = b * 1 + 2");
+	Ny_ParseSourceCode(state, "1 + 2 * 3 / 4 - 5");
 
 	Ny_DestroyState(state);
 

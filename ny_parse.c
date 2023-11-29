@@ -29,7 +29,7 @@ void Ny_DestroyExpression(Ny_Expression* expr)
 
 static Ny_CodeBlock* parse_code_block(Ny_ParserState* parser);
 static Ny_Statement* parse_statement(Ny_ParserState* parser);
-
+static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, Ny_Bool endline);
 
 
 
@@ -125,7 +125,8 @@ static Ny_Bool parse_operator(
 			/* If operators are the same */
 			if (Ny_IsAssignmentOp(node->op))
 			{
-
+				printf("Oh dear god this is confusing\n");
+				Ny_Assert(0);
 			} else
 			{
 				Ny_PopBackVector(operatorstack);
@@ -152,6 +153,57 @@ static Ny_Bool parse_operator(
 		}
 		Ny_PushBackVector(operatorstack, node);
 	}
+	return Ny_TRUE;
+}
+
+static Ny_Bool parse_separator(
+	Ny_ParserState* parser,
+	Ny_Vector* operatorstack,
+	Ny_Expression* expr,
+	Ny_Token* token,
+	Ny_Bool* exprend
+)
+{
+	Ny_ExprNode* node;
+
+	switch (token->separatorid)
+	{
+	case Ny_SP_LPAREN:
+		if (!parse_subexpression(parser, expr, Ny_FALSE)) return Ny_FALSE;
+		token = get_current_token(parser);
+		if (!token || token->separatorid != Ny_SP_RPAREN)
+		{
+			printf("Expected closing parenthesis\n");
+			return Ny_FALSE;
+		}
+		break;
+
+	case Ny_SP_LBRACKET:
+		node = create_exprnode(Ny_ET_OPERATOR);
+		node->op = Ny_OP_ARRAYACCESS;
+		Ny_PushBackVector(&operatorstack, node);
+		if (!parse_subexpression(parser, expr, Ny_FALSE)) return Ny_FALSE;
+		token = get_current_token(parser);
+		if (!token || token->separatorid != Ny_SP_RBRACKET)
+		{
+			printf("Expected closing square bracket\n");
+			return Ny_FALSE;
+		}
+		/* Push the arrayaccess operator */
+		Ny_PopBackVector(&operatorstack);
+		Ny_PushBackVector(&expr->nodes, node);
+		break;
+
+	case Ny_SP_LBRACE:
+		/* Read object probably */
+		Ny_Assert(0);
+		break;
+
+	default:
+		*exprend = Ny_TRUE;
+		break;
+	}
+	return Ny_TRUE;
 }
 
 static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, Ny_Bool endline)
@@ -164,52 +216,14 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 	{
 		Ny_Token* token = get_next_token(parser);
 		Ny_Assert(token);
-
 		Ny_ExprNode* node;
+
 		if (token->type == Ny_TT_OPERATOR)
 		{
-			/* Operator */
-			node = parse_operator(parser, &operatorstack, expr, token);
+			if (!parse_operator(parser, &operatorstack, expr, token)) goto fail;
 		} else if (token->type == Ny_TT_SEPARATOR)
 		{
-			/* Subexpression */
-			switch (token->separatorid)
-			{
-			case Ny_SP_LPAREN:
-				if (!parse_subexpression(parser, expr, Ny_FALSE)) goto fail;
-				token = get_current_token(parser);
-				if (!token || token->separatorid != Ny_SP_RPAREN)
-				{
-					printf("Expected closing parenthesis\n");
-					goto fail;
-				}
-				break;
-
-			case Ny_SP_LBRACKET:
-				node = create_exprnode(Ny_ET_OPERATOR);
-				node->op = Ny_OP_ARRAYACCESS;
-				Ny_PushBackVector(&operatorstack, node);
-				if (!parse_subexpression(parser, expr, Ny_FALSE)) goto fail;
-				token = get_current_token(parser);
-				if (!token || token->separatorid != Ny_SP_RBRACKET)
-				{
-					printf("Expected closing square bracket\n");
-					goto fail;
-				}
-				/* Push the arrayaccess operator */
-				Ny_PopBackVector(&operatorstack);
-				Ny_PushBackVector(&expr->nodes, node);
-				break;
-
-			case Ny_SP_LBRACE:
-				/* Read object probably */
-				Ny_Assert(0);
-				break;
-
-			default:
-				exprend = Ny_TRUE;
-				break;
-			}
+			if (!parse_separator(parser, &operatorstack, expr, token, &exprend)) goto fail;
 		} else
 		{
 			/* Operand */
@@ -227,7 +241,7 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 		}
 
 		/* Print the expression as it is right now */
-		printf("Expression: ");
+		/*printf("Expression: ");
 		for (int i = 0; i < expr->nodes.count; i++)
 		{
 			Ny_PrintExprNode(expr->nodes.buffer[i]);
@@ -240,7 +254,7 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 			Ny_PrintExprNode(operatorstack.buffer[i]);
 			printf(", ");
 		}
-		printf("\n\n");
+		printf("\n\n");*/
 	}
 
 	/* Put all operators left in the stack in the expression */
@@ -264,6 +278,54 @@ fail:
 	return Ny_FALSE;
 }
 
+static Ny_Bool build_expression_tree_operator(Ny_ParserState* parser, Ny_Expression* expr, int* nodeid)
+{
+	Ny_ExprNode* node = expr->nodes.buffer[*nodeid];
+	Ny_Assert(node->type == Ny_ET_OPERATOR);
+
+	Ny_PrintExprNode(node);
+	printf("\n");
+
+	if (!Ny_IsUnaryOp(node->op))
+	{
+		Ny_ExprNode* right = expr->nodes.buffer[--(*nodeid)];
+		if (right->type == Ny_ET_OPERATOR)
+			build_expression_tree_operator(parser, expr, nodeid);
+		node->right = right;
+
+		Ny_ExprNode* left = expr->nodes.buffer[--(*nodeid)];
+		if (left->type == Ny_ET_OPERATOR)
+			build_expression_tree_operator(parser, expr, nodeid);
+		node->left = left;
+	} else
+	{
+		printf("unimplemented\n");
+		return Ny_FALSE;
+	}
+
+	return Ny_TRUE;
+}
+
+static Ny_Bool build_expression_tree(Ny_ParserState* parser, Ny_Expression* expr)
+{
+	Ny_Assert(!expr->topnode);
+
+	Ny_ExprNode* topnode = Ny_VectorBack(expr->nodes, Ny_ExprNode*);
+	if (!topnode) return Ny_FALSE;
+	if (topnode->type != Ny_ET_OPERATOR)
+	{
+		/* Single node tree */
+		Ny_Assert(expr->nodes.count == 1);
+	} else
+	{
+		int nodeid = expr->nodes.count - 1;
+		build_expression_tree_operator(parser, expr, &nodeid);
+	}
+	expr->topnode = topnode;
+
+	return Ny_TRUE;
+}
+
 static Ny_Expression* parse_expression(Ny_ParserState* parser, Ny_Bool endline)
 {
 	Ny_Expression* expr = Ny_AllocType(Ny_Expression);
@@ -276,6 +338,8 @@ static Ny_Expression* parse_expression(Ny_ParserState* parser, Ny_Bool endline)
 		printf(", ");
 	}
 	putchar('\n');
+
+	build_expression_tree(parser, expr);
 
 	return expr;
 }
