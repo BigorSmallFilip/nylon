@@ -154,13 +154,15 @@ typedef struct Ny_ExprNode
 	};
 } Ny_ExprNode;
 
+void Ny_PrintExprNode(const Ny_ExprNode* node);
+
+void Ny_DestroyExprNode(Ny_ExprNode* node);
+
 typedef struct
 {
 	Ny_Vector nodes;
 	Ny_ExprNode* topnode;
 } Ny_Expression;
-
-void Ny_PrintExprNode(const Ny_ExprNode* node);
 
 void Ny_PrintExpressionTree(const Ny_Expression* expr);
 

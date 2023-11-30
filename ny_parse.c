@@ -23,12 +23,33 @@ void Ny_PrintExprNode(const Ny_ExprNode* node)
 	}
 }
 
+void Ny_DestroyExprNode(Ny_ExprNode* node)
+{
+	if (!node) return;
+	switch (node->type)
+	{
+	case Ny_ET_STRINGLITERAL:
+		Ny_Free(node->string);
+		break;
+	case Ny_ET_VARIABLE:
+		Ny_Free(node->variable);
+		break;
+
+	default:
+		break;
+	}
+}
+
+
+
 static void print_indent(int depth)
 {
-	for (int i = 0; i < depth; i++)
+	for (int i = 0; i < depth - 1; i++)
 	{
-		printf("  ");
+		printf(" | ");
 	}
+	if (depth > 0)
+		printf(" |=");
 }
 
 static void recursive_print_exprnode(const Ny_ExprNode* node, int depth)
@@ -37,27 +58,12 @@ static void recursive_print_exprnode(const Ny_ExprNode* node, int depth)
 	{
 		print_indent(depth);
 		Ny_PrintExprNode(node);
-		printf(": {\n");
+		putchar('\n');
 
 		if (node->left)
-		{
-			print_indent(depth + 1);
-			printf("left: {\n");
-			recursive_print_exprnode(node->left, depth + 2);
-			print_indent(depth + 1);
-			printf("}\n");
-		}
+			recursive_print_exprnode(node->left, depth + 1);
 		if (node->right)
-		{
-			print_indent(depth + 1);
-			printf("right: {\n");
-			recursive_print_exprnode(node->right, depth + 2);
-			print_indent(depth + 1);
-			printf("}\n");
-		}
-
-		print_indent(depth);
-		printf("}\n");
+			recursive_print_exprnode(node->right, depth + 1);
 	} else
 	{
 		print_indent(depth);
@@ -73,7 +79,13 @@ void Ny_PrintExpressionTree(const Ny_Expression* expr)
 
 void Ny_DestroyExpression(Ny_Expression* expr)
 {
-	
+	if (!expr) return;
+	for (int i = 0; i < expr->nodes.count; i++)
+	{
+		Ny_DestroyExprNode(expr->nodes.buffer[i]);
+	}
+	Ny_Free(expr->nodes.buffer);
+	Ny_Free(expr);
 }
 
 
@@ -333,6 +345,30 @@ fail:
 	return Ny_FALSE;
 }
 
+static Ny_Bool validate_expression_tree_operator(Ny_ParserState* parser, Ny_ExprNode* node)
+{
+	Ny_Assert(node->type == Ny_ET_OPERATOR);
+	
+	/* Assignment operators in an expression must assign to rvalues.
+	** Check that the left child node of assignment operators are rvalues.
+	** Rvalues are variables, member access operators and array access operators.
+	*/
+	if (Ny_IsAssignmentOp(node->op))
+	{
+		if (node->left->type != Ny_ET_VARIABLE &&
+			left->op != Ny_OP_MEMBERACCESS &&
+			left->op != Ny_OP_ARRAYACCESS)
+		{
+			/* Left side of assignment is not an rvalue, 2 = a + b */
+			printf("Left side of assignment is not an rvalue!\n");
+			return Ny_FALSE;
+		}
+	} else if (1)
+	{
+
+	}
+}
+
 static Ny_Bool build_expression_tree_operator(Ny_ParserState* parser, Ny_Expression* expr, int* nodeid)
 {
 	Ny_ExprNode* node = expr->nodes.buffer[*nodeid];
@@ -345,13 +381,15 @@ static Ny_Bool build_expression_tree_operator(Ny_ParserState* parser, Ny_Express
 	{
 		Ny_ExprNode* right = expr->nodes.buffer[--(*nodeid)];
 		if (right->type == Ny_ET_OPERATOR)
-			build_expression_tree_operator(parser, expr, nodeid);
+			if (!build_expression_tree_operator(parser, expr, nodeid)) return Ny_FALSE;
 		node->right = right;
 
 		Ny_ExprNode* left = expr->nodes.buffer[--(*nodeid)];
 		if (left->type == Ny_ET_OPERATOR)
-			build_expression_tree_operator(parser, expr, nodeid);
+			if (!build_expression_tree_operator(parser, expr, nodeid)) return Ny_FALSE;
 		node->left = left;
+
+		
 	} else
 	{
 		printf("unimplemented\n");
@@ -374,7 +412,7 @@ static Ny_Bool build_expression_tree(Ny_ParserState* parser, Ny_Expression* expr
 	} else
 	{
 		int nodeid = expr->nodes.count - 1;
-		build_expression_tree_operator(parser, expr, &nodeid);
+		if (!build_expression_tree_operator(parser, expr, &nodeid)) return Ny_FALSE;
 	}
 	expr->topnode = topnode;
 
@@ -394,11 +432,15 @@ static Ny_Expression* parse_expression(Ny_ParserState* parser, Ny_Bool endline)
 	}
 	putchar('\n');
 
-	build_expression_tree(parser, expr);
+	if (!build_expression_tree(parser, expr)) goto fail;
 
 	Ny_PrintExpressionTree(expr);
 
 	return expr;
+
+fail:
+	Ny_DestroyExpression(expr);
+	return NULL;
 }
 
 
