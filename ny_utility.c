@@ -26,7 +26,7 @@ Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity)
 		return Ny_FALSE;
 	}
 	if (newcapacity < Ny_MIN_VECTOR_CAPACITY) newcapacity = Ny_MIN_VECTOR_CAPACITY;
-	vector->buffer = realloc(vector->buffer, newcapacity * sizeof(void*));
+	vector->buffer = Ny_Realloc(vector->buffer, newcapacity * sizeof(void*));
 	vector->capacity = newcapacity;
 	return Ny_TRUE;
 }

@@ -193,4 +193,15 @@ char* Ny_CopyCutString(
 #define Ny_DebugPrint() void
 #endif
 
+#define Ny_CONSOLE_ANSI_COLOR
+#ifdef Ny_CONSOLE_ANSI_COLOR
+#define Ny_ANSICOLOR_ERROR "\x1B[0;91m"
+#define Ny_ANSICOLOR_WARNING "\x1B[0;93m"
+#define Ny_ANSICOLOR_RESET "\x1B[0m"
+#else
+#define Ny_ANSICOLOR_ERROR
+#define Ny_ANSICOLOR_WARNING
+#define Ny_ANSICOLOR_RESET
+#endif
+
 #endif

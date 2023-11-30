@@ -314,17 +314,11 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode);
 
 
 
-typedef struct
+typedef struct Ny_AST
 {
 	Ny_CodeBlock global_codeblock;
 } Ny_AST;
 
-
-
-
-
 Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode);
-
-
 
 #endif

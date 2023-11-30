@@ -356,8 +356,8 @@ static Ny_Bool validate_expression_tree_operator(Ny_ParserState* parser, Ny_Expr
 	if (Ny_IsAssignmentOp(node->op))
 	{
 		if (node->left->type != Ny_ET_VARIABLE &&
-			left->op != Ny_OP_MEMBERACCESS &&
-			left->op != Ny_OP_ARRAYACCESS)
+			node->left->op != Ny_OP_MEMBERACCESS &&
+			node->left->op != Ny_OP_ARRAYACCESS)
 		{
 			/* Left side of assignment is not an rvalue, 2 = a + b */
 			printf("Left side of assignment is not an rvalue!\n");

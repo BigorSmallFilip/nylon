@@ -14,14 +14,6 @@ void Ny_DestroyState(Ny_State* state);
 
 
 
-typedef struct
-{
-	char* sourcecode;
-	size_t sourcecode_length;
-	char* filename;
-	size_t filename_length;
-} Ny_SourceUnit;
-
 enum
 {
 	Ny_MSGT_GENERAL,
@@ -34,24 +26,26 @@ typedef unsigned char Ny_StateMessageType;
 typedef struct
 {
 	Ny_StateMessageType type;
-	Ny_SourceUnit* sourceunit;
 	int linenum;
-	int charpos;
+	char* filename;
 	char* msg;
 } Ny_StateMessage;
 
 void Ny_PushStateMessage(
 	Ny_State* state,
 	Ny_StateMessageType type,
-	Ny_SourceUnit* sourceunit,
 	int linenum,
-	int charpos,
+	char* filename,
 	const char* const format,
 	...
 );
 
 void Ny_PrintStateMessage(
 	Ny_StateMessage* msg
+);
+
+void Ny_PrintAllStateMessages(
+	Ny_State* state
 );
 
 #endif
