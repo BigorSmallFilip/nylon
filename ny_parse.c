@@ -4,6 +4,13 @@
 
 void Ny_PrintExprNode(const Ny_ExprNode* node)
 {
+	if (!node) return;
+	if (node->type < 0 && node->type >= Ny_NUM_EXPRNODETYPES)
+	{
+		printf("(invalid expression node)");
+		return;
+	}
+
 	switch (node->type)
 	{
 	case Ny_ET_OPERATOR: printf("%s", ny_operatorid_strings[node->op]); break;
@@ -14,6 +21,54 @@ void Ny_PrintExprNode(const Ny_ExprNode* node)
 		printf("uniplemented");
 		break;
 	}
+}
+
+static void print_indent(int depth)
+{
+	for (int i = 0; i < depth; i++)
+	{
+		printf("  ");
+	}
+}
+
+static void recursive_print_exprnode(const Ny_ExprNode* node, int depth)
+{
+	if (node->type == Ny_ET_OPERATOR)
+	{
+		print_indent(depth);
+		Ny_PrintExprNode(node);
+		printf(": {\n");
+
+		if (node->left)
+		{
+			print_indent(depth + 1);
+			printf("left: {\n");
+			recursive_print_exprnode(node->left, depth + 2);
+			print_indent(depth + 1);
+			printf("}\n");
+		}
+		if (node->right)
+		{
+			print_indent(depth + 1);
+			printf("right: {\n");
+			recursive_print_exprnode(node->right, depth + 2);
+			print_indent(depth + 1);
+			printf("}\n");
+		}
+
+		print_indent(depth);
+		printf("}\n");
+	} else
+	{
+		print_indent(depth);
+		Ny_PrintExprNode(node);
+		putchar('\n');
+	}
+}
+
+void Ny_PrintExpressionTree(const Ny_Expression* expr)
+{
+	recursive_print_exprnode(expr->topnode, 0);
 }
 
 void Ny_DestroyExpression(Ny_Expression* expr)
@@ -283,8 +338,8 @@ static Ny_Bool build_expression_tree_operator(Ny_ParserState* parser, Ny_Express
 	Ny_ExprNode* node = expr->nodes.buffer[*nodeid];
 	Ny_Assert(node->type == Ny_ET_OPERATOR);
 
-	Ny_PrintExprNode(node);
-	printf("\n");
+	//Ny_PrintExprNode(node);
+	//printf("\n");
 
 	if (!Ny_IsUnaryOp(node->op))
 	{
@@ -340,6 +395,8 @@ static Ny_Expression* parse_expression(Ny_ParserState* parser, Ny_Bool endline)
 	putchar('\n');
 
 	build_expression_tree(parser, expr);
+
+	Ny_PrintExpressionTree(expr);
 
 	return expr;
 }

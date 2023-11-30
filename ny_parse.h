@@ -162,8 +162,10 @@ typedef struct
 
 void Ny_PrintExprNode(const Ny_ExprNode* node);
 
+void Ny_PrintExpressionTree(const Ny_Expression* expr);
+
 /*
-** @brief Destroys an expression and all its nodes
+** @brief Destroys an expression and all its nodes recursively
 ** @param expr Expression to destroy.
 */
 void Ny_DestroyExpression(Ny_Expression* expr);
