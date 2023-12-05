@@ -292,7 +292,8 @@ static Ny_Token* read_number_token(
 			if (decimalpoint)
 			{
 				//Lnn_PushParserSyntaxError(linenum, "Two decimal points in one number");
-				printf("Two decimal points in one number");
+				Ny_SyntaxError("Two decimal points in one number");
+				parser->charpos = i + 1;
 				return NULL;
 			}
 			decimalpoint = Ny_TRUE;
@@ -300,7 +301,8 @@ static Ny_Token* read_number_token(
 		{
 			if (is_alpha(c))
 			{
-				//Lnn_PushParserSyntaxError(linenum, "Letter character '%c' directly after number", sourcecode[i]);
+				Ny_SyntaxError("Letter character %c directly after number", c);
+				parser->charpos = i + 1;
 				return NULL;
 			}
 			end = i;
@@ -396,12 +398,13 @@ static Ny_Token* read_string_token(
 
 
 
-Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
+Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode, const char* filename)
 {
 	parser->charpos = 0;
 	parser->linenum = 1;
 	Ny_InitVector(&parser->tokens, Ny_MIN_VECTOR_CAPACITY);
 	parser->sourcecode = sourcecode;
+	parser->filename = filename;
 
 	while (Ny_TRUE)
 	{
@@ -432,8 +435,11 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		case CT_ENDLINE:
 		{
 			/* If an endline char is found then the previous token gets the lastonline flag set */
-			Ny_Token* lasttoken = (Ny_Token*)parser->tokens.buffer[parser->tokens.count - 1];
-			lasttoken->lastonline = Ny_TRUE;
+			if (parser->tokens.count > 0)
+			{
+				Ny_Token* lasttoken = (Ny_Token*)parser->tokens.buffer[parser->tokens.count - 1];
+				lasttoken->lastonline = Ny_TRUE;
+			}
 		} /* Fall through */
 		case CT_SPACE:
 			parser->charpos++;

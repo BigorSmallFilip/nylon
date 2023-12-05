@@ -174,7 +174,8 @@ static Ny_Bool parse_operator(
 	Ny_ParserState* parser,
 	Ny_Vector* operatorstack,
 	Ny_Expression* expr,
-	Ny_Token* token
+	Ny_Token* token,
+	Ny_Bool prev_was_operand
 )
 {
 	Ny_ExprNode* node = create_exprnode(Ny_ET_OPERATOR);
@@ -279,6 +280,8 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 	Ny_Vector operatorstack;
 	Ny_InitVector(&operatorstack, Ny_MIN_VECTOR_CAPACITY);
 
+	Ny_Token* prevtoken = NULL;
+	Ny_Bool prev_was_operand = Ny_FALSE;
 	while (!exprend)
 	{
 		Ny_Token* token = get_next_token(parser);
@@ -287,16 +290,25 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 
 		if (token->type == Ny_TT_OPERATOR)
 		{
-			if (!parse_operator(parser, &operatorstack, expr, token)) goto fail;
+			if (!parse_operator(parser, &operatorstack, expr, token, prev_was_operand)) goto fail;
+			prev_was_operand = Ny_FALSE;
 		} else if (token->type == Ny_TT_SEPARATOR)
 		{
+			if (prev_was_operand)
+			{
+				Ny_SyntaxError("Operand beginning with '%c' directly follows another operand",
+					ny_separator_chars[token->separatorid]);
+				goto fail;
+			}
 			if (!parse_separator(parser, &operatorstack, expr, token, &exprend)) goto fail;
+			prev_was_operand = Ny_TRUE;
 		} else
 		{
 			/* Operand */
 			node = parse_operand(parser, token);
 			if (!node) goto fail;
 			Ny_PushBackVector(&expr->nodes, node);
+			prev_was_operand = Ny_TRUE;
 		}
 
 		/* If expression should end on endline and token is last on line then expression has ended */
@@ -322,6 +334,8 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 			printf(", ");
 		}
 		printf("\n\n");*/
+
+		prevtoken = token;
 	}
 
 	/* Put all operators left in the stack in the expression */
@@ -379,6 +393,11 @@ static Ny_Bool build_expression_tree_operator(Ny_ParserState* parser, Ny_Express
 
 	if (!Ny_IsUnaryOp(node->op))
 	{
+		if (*nodeid <= 1)
+		{
+			printf("Not enough tokens!!=!=!===!=?!?!?!?!?!?\n");
+			return Ny_FALSE;
+		}
 		Ny_ExprNode* right = expr->nodes.buffer[--(*nodeid)];
 		if (right->type == Ny_ET_OPERATOR)
 			if (!build_expression_tree_operator(parser, expr, nodeid)) return Ny_FALSE;
@@ -546,7 +565,8 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 	Ny_DebugPrint("Parsing source code:\n%s\n", sourcecode);
 
 	Ny_ParserState parser = { 0 };
-	Ny_TokenizeSourceCode(&parser, sourcecode);
+	parser.main_state = state;
+	Ny_TokenizeSourceCode(&parser, sourcecode, "tsuporleg");
 
 	Ny_DebugPrint("Tokenization process finished\n");
 	for (int i = 0; i < parser.tokens.count; i++)

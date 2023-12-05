@@ -175,3 +175,41 @@ char* Ny_CopyCutString(const char* srcstring, size_t start, size_t length)
 	str[length] = '\0';
 	return str;
 }
+
+
+
+char* Ny_LoadTextFile(const char* filename)
+{
+	if (!filename)
+		return NULL;
+	FILE* file = NULL;
+	fopen_s(&file, filename, "r");
+	if (!file)
+	{
+		printf("The file '%s' could not be opened\n", filename);
+		return NULL;
+	}
+
+	int length = 0;
+	/* Calculate the file size */
+	while (!feof(file))
+	{
+		fgetc(file);
+		length++;
+	}
+
+	char* filebuffer = Ny_Malloc(length + 1);
+	/* Read the file into the buffer */
+	rewind(file);
+	int pos = 0;
+	while (!feof(file))
+	{
+		char c = fgetc(file);
+		filebuffer[pos++] = c;
+	}
+
+	if (pos > 0)
+		filebuffer[pos - 1] = '\0';
+	fclose(file);
+	return filebuffer;
+}

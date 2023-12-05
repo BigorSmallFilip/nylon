@@ -59,4 +59,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="test.ny">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -7,6 +7,7 @@
 Ny_State* Ny_CreateState()
 {
 	Ny_State* state = Ny_AllocType(Ny_State);
+	Ny_InitVector(&state->messages, Ny_STD_VECTOR_CAPACITY);
 	return state;
 }
 
@@ -85,4 +86,20 @@ void Ny_PrintAllStateMessages(Ny_State* state)
 		}
 	}
 	printf("------------------------------\n");
+	Ny_ClearStateMessages(state);
+}
+
+
+
+void Ny_ClearStateMessages(Ny_State* state)
+{
+	for (int i = 0; i < state->messages.count; i++)
+	{
+		Ny_StateMessage* msg = state->messages.buffer[i];
+		Ny_Free(msg->filename);
+		Ny_Free(msg->msg);
+		Ny_Free(msg);
+	}
+	Ny_Free(state->messages.buffer);
+	Ny_InitVector(&state->messages, Ny_STD_VECTOR_CAPACITY);
 }

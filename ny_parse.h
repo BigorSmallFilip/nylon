@@ -299,6 +299,7 @@ typedef struct
 {
 	Ny_State* main_state;
 	const char* sourcecode;
+	const char* filename;
 	int charpos;
 	int linenum;
 	int errorcount;
@@ -308,7 +309,7 @@ typedef struct
 
 #define Ny_MAX_SOURCECODE_LENGTH 50000
 
-Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode);
+Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode, const char* filename);
 
 
 
