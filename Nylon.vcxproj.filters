@@ -24,9 +24,6 @@
     <ClCompile Include="ny_object.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ny_vm.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ny_utility.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -36,9 +33,18 @@
     <ClCompile Include="ny_tokenize.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ny_assembly.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ny_bytecode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="philosofy.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="vm_instructions.txt">
       <Filter>Source Files</Filter>
     </Text>
   </ItemGroup>
@@ -52,10 +58,13 @@
     <ClInclude Include="ny_object.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ny_vm.h">
+    <ClInclude Include="ny_parse.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ny_parse.h">
+    <ClInclude Include="ny_assembly.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ny_bytecode.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

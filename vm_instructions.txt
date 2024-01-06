@@ -1,0 +1,116 @@
+/* Math */
+ADD
+SUB
+MUL
+DIV
+IDIV
+MOD
+SQ
+POW
+SQRT
+NTHROOT
+NEG
+ABS
+
+Trigonometry?
+SIN
+COS
+TAN
+COT
+SEC
+CSC
+SINH
+COSH
+TANH
+ASIN
+ACOS
+ATAN
+
+VEC_DOT
+VEC_CROSS
+VEC_NORM
+VEC_MAG
+
+BAND
+BOR
+BXOR
+BNOT
+SHL
+SHR
+
+LAND
+LOR
+LXOR
+LNOT
+
+
+
+LEN
+ARRAY_IDX
+OBJ_MEMBER
+
+LOAD_CONST
+LOAD_LOCAL
+LOAD_GLOBAL
+
+CALL
+RETURN
+These two grab things from the stack and put them in a special place
+
+
+
+Unary operators like SQ, NEG, ABS
+SQ instruction simply squares whatever is on top of the stack. Doesn't even need to pop or push anything. Very fast...
+
+
+
+
+=== Code:
+
+function Math(n, m)
+	n += 10
+	r = n * m
+	return r
+
+Math(20, 30)
+
+
+
+=== Disassembly:
+
+Math:
+LOAD_LOCAL 0		(n)
+LOAD_CONST 10       (10)
+ADD					(n + 10)
+STORE_LOCAL 0		(n =)
+LOAD_LOCAL 0		(n)
+LOAD_LOCAL 1		(m)
+MUL					(n * m)
+STORE_LOCAL 2		(r =)
+LOAD_LOCAL 2		(r)
+RETURN				(return)
+
+LOAD_CONST 20
+LOAD_CONST 30
+LOAD_GLOBAL Math
+CALL 2arg
+
+
+
+
+Math:
+LOAD_LOCAL 0		(n)				n
+LOAD_CONST 10       (10)			n 10
+ADD					(n + 10)		n+10
+STORE_LOCAL 0		(n =)
+LOAD_LOCAL 0		(n)				n
+LOAD_LOCAL 1		(m)				m
+MUL					(n * m)			n*m
+STORE_LOCAL 2		(r =)			
+LOAD_LOCAL 2		(r)				r
+RETURN				(return)
+
+LOAD_CONST 20
+LOAD_CONST 30
+LOAD_GLOBAL Math
+CALL 2arg

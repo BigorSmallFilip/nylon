@@ -126,7 +126,26 @@ static Ny_ExprNode* create_exprnode(Ny_ExprNodeType type)
 
 static Ny_ExprNode* parse_function_call(Ny_ParserState* parser, Ny_Token* token)
 {
-	printf("unimplemented functoin\n");
+	Ny_ExprNode* node = Ny_AllocType(Ny_ExprNode);
+	node->type = Ny_ET_FUNCTIONCALL;
+	node->functioncall.identifier = _strdup(token->string);
+	
+	parser->curtoken++; /* Skip function left parenthesis */
+	token = get_next_token(parser);
+	if (!token || token->separatorid == Ny_SP_LPAREN)
+	{
+
+	}
+
+	while (1)
+	{
+
+	}
+
+	return node;
+
+fail:
+
 	return NULL;
 }
 
@@ -546,6 +565,7 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 	Ny_DebugPrint("Parsing source code:\n%s\n", sourcecode);
 
 	Ny_ParserState parser = { 0 };
+	parser.main_state = state;
 	Ny_TokenizeSourceCode(&parser, sourcecode);
 
 	Ny_DebugPrint("Tokenization process finished\n");

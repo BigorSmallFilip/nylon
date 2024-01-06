@@ -303,6 +303,7 @@ typedef struct
 	int linenum;
 	int errorcount;
 	Ny_Vector tokens;
+
 	int curtoken;
 } Ny_ParserState;
 

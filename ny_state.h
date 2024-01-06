@@ -5,6 +5,7 @@
 
 typedef struct
 {
+	Ny_Vector stack;
 	Ny_Vector messages;
 } Ny_State;
 

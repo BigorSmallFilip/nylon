@@ -135,23 +135,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ny_assembly.c" />
+    <ClCompile Include="ny_bytecode.c" />
     <ClCompile Include="ny_object.c" />
     <ClCompile Include="ny_parse.c" />
     <ClCompile Include="ny_state.c" />
     <ClCompile Include="ny_tokenize.c" />
     <ClCompile Include="ny_utility.c" />
-    <ClCompile Include="ny_vm.c" />
     <ClCompile Include="testmain.c" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="philosofy.txt" />
+    <Text Include="vm_instructions.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ny_assembly.h" />
+    <ClInclude Include="ny_bytecode.h" />
     <ClInclude Include="ny_object.h" />
     <ClInclude Include="ny_parse.h" />
     <ClInclude Include="ny_state.h" />
     <ClInclude Include="ny_utility.h" />
-    <ClInclude Include="ny_vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
