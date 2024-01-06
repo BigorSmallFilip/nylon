@@ -49,4 +49,16 @@ void Ny_PrintAllStateMessages(
 	Ny_State* state
 );
 
+void Ny_ClearStateMessages(
+	Ny_State* state
+);
+
+#define Ny_SyntaxError(format, ...) Ny_PushStateMessage( \
+	parser->main_state,                              \
+	Ny_MSGT_SYNTAXERROR,                             \
+	parser->linenum,                                 \
+	parser->filename,                                \
+	format,                                          \
+	__VA_ARGS__)
+
 #endif
