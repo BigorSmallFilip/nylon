@@ -187,10 +187,6 @@ char* Ny_CopyCutString(
 
 
 
-char* Ny_LoadTextFile(const char* filename);
-
-
-
 #ifdef Ny_DEBUG & Ny_DEBUGPRINT
 #define Ny_DebugPrint printf
 #else
