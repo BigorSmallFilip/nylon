@@ -6,22 +6,13 @@ Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity)
 {
 	vector->buffer = Ny_Calloc(capacity, sizeof(void*));
 	vector->capacity = capacity;
-	vector->count = 0;
-	return vector;
-}
-
-Ny_Vector* Ny_CreateVector(size_t capacity)
-{
-	Ny_Vector* vector = Ny_Malloc(sizeof(Ny_Vector));
-	vector->buffer = Ny_Calloc(capacity, sizeof(void*));
-	vector->capacity = capacity;
-	vector->count = 0;
+	vector->size = 0;
 	return vector;
 }
 
 Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity)
 {
-	if (newcapacity < vector->count)
+	if (newcapacity < vector->size)
 	{
 		return Ny_FALSE;
 	}
@@ -31,27 +22,27 @@ Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity)
 	return Ny_TRUE;
 }
 
-Ny_Bool Ny_PushBackVector(Ny_Vector* vector, void* item)
+Ny_Bool Ny_PushBackVector(Ny_Vector* vector, void* item, size_t size)
 {
-	if (vector->count + 1 > vector->capacity)
+	if (vector->size + size > vector->capacity)
 	{
 		if (!Ny_DoubleVectorSize(vector)) return Ny_FALSE;
 	}
-	vector->buffer[vector->count] = item;
-	vector->count++;
+	memcpy((size_t)vector->buffer + vector->size, item, size);
+	vector->size += size;
 	return Ny_TRUE;
 }
 
-void* Ny_PopBackVector(Ny_Vector* vector)
+Ny_Bool Ny_PopBackVector(Ny_Vector* vector, void* item, size_t size)
 {
-	if (vector->count <= 0) return NULL;
-	void* item = vector->buffer[vector->count - 1];
-	vector->count--;
-	if (vector->count * 2 <= vector->capacity)
+	if (vector->size < size) return Ny_FALSE;
+	memcpy(item, (size_t)vector->buffer + vector->size - size, size);
+	vector->size -= size;
+	if (vector->size << 1 <= vector->capacity)
 	{
-		if (!Ny_HalfVectorSize(vector)) return NULL;
+		if (!Ny_HalfVectorSize(vector)) return Ny_FALSE;
 	}
-	return item;
+	return Ny_TRUE;
 }
 
 
