@@ -63,8 +63,8 @@ typedef unsigned int Ny_Hash;
 
 typedef struct
 {
-	void* buffer;
-	size_t size;
+	void** buffer;
+	size_t count;
 	size_t capacity;
 } Ny_Vector;
 
@@ -72,22 +72,34 @@ typedef struct
 
 Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity);
 
-#define Ny_STD_VECTOR_CAPACITY 16
-#define Ny_MIN_VECTOR_CAPACITY 16
+#define Ny_STD_VECTOR_CAPACITY 4
+#define Ny_MIN_VECTOR_CAPACITY 4
 Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity);
-
 #define Ny_HalfVectorSize(vector) Ny_ResizeVector((vector), (vector)->capacity >> 1)
 #define Ny_DoubleVectorSize(vector) Ny_ResizeVector((vector), (vector)->capacity << 1)
 
-Ny_Bool Ny_PushBackVector(Ny_Vector* vector, void* item, size_t size);
-Ny_Bool Ny_PopBackVector(Ny_Vector* vector, void* item, size_t size);
-
-#define Ny_PushBackVectorPtr(vector, item) Ny_PushBackVector((vector), &(item), sizeof(void*))
-#define Ny_IndexVectorPtr(vector, index) (((void**)(vector).buffer)[(index) * sizeof(void*)])
-#define Ny_VectorPtrCount(vector) ((vector).size / sizeof(void*))
+Ny_Bool Ny_PushBackVector(Ny_Vector* vector, void* item);
+void* Ny_PopBackVector(Ny_Vector* vector);
 
 #define Ny_VectorBack(vector, type) (vector.count > 0 ? (type)(vector.buffer[vector.count - 1]) : NULL)
 #define Ny_VectorPBack(vector, type) (vector->count > 0 ? (type)(vector->buffer[vector->count - 1]) : NULL)
+
+
+
+typedef struct
+{
+	void* buffer;
+	size_t size;
+	size_t capacity;
+} Ny_ByteVector;
+
+Ny_Bool Ny_InitByteVector(Ny_ByteVector* vector, size_t capacity);
+Ny_Bool Ny_ResizeByteVector(Ny_ByteVector* vector, size_t newcapacity);
+#define Ny_HalfByteVectorSize(vector) Ny_ResizeByteVector((vector), (vector)->capacity >> 1)
+#define Ny_DoubleByteVectorSize(vector) Ny_ResizeByteVector((vector), (vector)->capacity << 1)
+
+Ny_Bool Ny_PushBackByteVector(Ny_ByteVector* vector, void* data, size_t size);
+Ny_Bool Ny_PopBackByteVector(Ny_ByteVector* vector, void** data, size_t size);
 
 
 

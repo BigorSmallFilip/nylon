@@ -103,13 +103,11 @@ static Ny_Bool parse_subexpression(Ny_ParserState* parser, Ny_Expression* expr, 
 static Ny_Token* get_current_token(Ny_ParserState* parser)
 {
 	if (parser->curtoken - 1 < 0) return NULL;
-	return Ny_IndexVectorPtr(parser->tokens, parser->curtoken - 1);
-	//return parser->tokens.buffer[parser->curtoken - 1];
-}
-static Ny_Token* get_next_token(Ny_ParserState* parser)
+	return parser->tokens.buffer[parser->curtoken - 1];
+}static Ny_Token* get_next_token(Ny_ParserState* parser)
 {
-	if (parser->curtoken >= Ny_VectorPtrCount(parser->tokens)) return NULL;
-	return Ny_IndexVectorPtr(parser->tokens, parser->curtoken++);
+	if (parser->curtoken >= parser->tokens.count) return NULL;
+	return parser->tokens.buffer[parser->curtoken++];
 }
 static Ny_Token* peek_next_token(const Ny_ParserState* parser)
 {

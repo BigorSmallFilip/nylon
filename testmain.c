@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 	//Ny_ParseSourceCode(state, "2 = a + b");
 	//Ny_PrintAllStateMessages(state);
 
-	Ny_CompileAssembly(state, "h");
+	Ny_CompileAssembly(state, "LOAD_CONST");
 	Ny_PrintAllStateMessages(state);
 
 	Ny_DestroyState(state);

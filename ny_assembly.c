@@ -9,6 +9,7 @@ Ny_Instruction get_string_instruction(const char* str)
 		if (strcmp(str, ny_instruction_strings[i]) == 0)
 			return (Ny_Instruction)i;
 	}
+	return -1;
 }
 
 static Ny_BytecodeBlock* assemble_assembly(Ny_ParserState* parser)
@@ -21,16 +22,23 @@ static Ny_BytecodeBlock* assemble_assembly(Ny_ParserState* parser)
 	while (i < parser->tokens.count)
 	{
 		curtoken = (Ny_Token*)parser->tokens.buffer[i];
-
 		if (curtoken->type != Ny_TT_IDENTIFIER)
 		{
-			Ny_PushStateMessage(&parser->main_state, Ny_MSGT_SYNTAXERROR, curtoken->linenum, "ass", "Expected an instruction");
+			Ny_PushStateMessage(parser->main_state, Ny_MSGT_SYNTAXERROR, curtoken->linenum, "ass", "Expected an instruction");
 			goto fail;
 		}
 
 		Ny_Instruction ins = get_string_instruction(curtoken->string);
-		Ny_PushBackVector(&bytecode->bytecode, ins);
-
+		if (ins >= 0)
+		{
+			Ny_PushBackByteVector(&bytecode->bytecode, &ins, sizeof(Ny_Instruction));
+			printf("Ins: %s\n", ny_instruction_strings[ins]);
+		} else
+		{
+			Ny_PushStateMessage(parser->main_state, Ny_MSGT_SYNTAXERROR, curtoken->linenum, "ass", "Invalid instruction %s", curtoken->string);
+			goto fail;
+		}
+		
 		i++;
 	}
 

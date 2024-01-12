@@ -17,7 +17,7 @@ enum
 	Ny_NUM_INSTRUCTIONS,
 	Ny_I_NULL
 };
-typedef unsigned int Ny_Instruction;
+typedef int Ny_Instruction;
 extern const char* ny_instruction_strings[Ny_NUM_INSTRUCTIONS];
 
 
@@ -25,7 +25,7 @@ extern const char* ny_instruction_strings[Ny_NUM_INSTRUCTIONS];
 typedef struct
 {
 	char* name;
-	Ny_Vector bytecode;
+	Ny_ByteVector bytecode;
 } Ny_BytecodeBlock;
 
 
