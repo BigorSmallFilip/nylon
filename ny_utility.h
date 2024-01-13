@@ -86,6 +86,8 @@ void* Ny_PopBackVector(Ny_Vector* vector);
 
 
 
+/* Vector of bytes */
+
 typedef struct
 {
 	void* buffer;
