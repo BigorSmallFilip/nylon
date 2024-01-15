@@ -3,6 +3,7 @@
 
 #include "ny_utility.h"
 #include "ny_state.h"
+#include "ny_parse.h"
 
 
 
@@ -43,8 +44,7 @@ typedef struct Ny_Object
 
 
 
-Ny_Bool Ny_OpAddInt(Ny_State* state, Ny_Object* object, Ny_Int n);
-Ny_Bool Ny_OpAddFloat(Ny_State* state, Ny_Object* object, Ny_Float n);
+Ny_Bool Ny_ObjectBinaryOp(Ny_Object* obj1, Ny_Object* obj2, Ny_OperatorID op);
 
 
 

@@ -50,3 +50,23 @@ expr = funccall(50)
 for i = 0, 10
 	print(i)
 
+
+
+
+
+Object types for thingsoes:
+
+trait AgeGetter
+	int age = 0
+	function get(self)
+		return self.age
+
+trait NameGetter
+	string name = ""
+	function get(self)
+		return self.name
+
+
+
+thingo = {}
+thingo.impl(AgeGetter)

@@ -2,40 +2,7 @@
 
 
 
-Ny_Bool Ny_OpAddInt(Ny_State* state, Ny_Object* object, Ny_Int n)
-{
-	if (object->type == Ny_OT_FLOAT)
-		object->t_float += (Ny_Float)n;
-	else if (object->type == Ny_OT_INT)
-		object->t_int += n;
-	else if (object->type == Ny_OT_STRING)
-	{
-		/* Push to da string */
-	}
-	else
-	{
-		/* Push error to state */
-		return Ny_FALSE;
-	}
-	return Ny_TRUE;
-}
-Ny_Bool Ny_OpAddFloat(Ny_State* state, Ny_Object* object, Ny_Float n)
-{
-	if (object->type == Ny_OT_FLOAT)
-		object->t_float += n;
-	else if (object->type == Ny_OT_INT)
-		object->t_int += (Ny_Int)n;
-	else if (object->type == Ny_OT_STRING)
-	{
-		/* Push to da string */
-	}
-	else
-	{
-		/* Push error to state */
-		return Ny_FALSE;
-	}
-	return Ny_TRUE;
-}
+
 
 
 
