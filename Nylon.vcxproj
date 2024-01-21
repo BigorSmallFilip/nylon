@@ -146,7 +146,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="philosofy.txt" />
-    <Text Include="vm_instructions.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ny_assembly.h" />
@@ -155,6 +154,7 @@
     <ClInclude Include="ny_parse.h" />
     <ClInclude Include="ny_state.h" />
     <ClInclude Include="ny_utility.h" />
+    <ClInclude Include="ny_vm.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="test.ny" />

@@ -44,9 +44,6 @@
     <Text Include="philosofy.txt">
       <Filter>Source Files</Filter>
     </Text>
-    <Text Include="vm_instructions.txt">
-      <Filter>Source Files</Filter>
-    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ny_utility.h">
@@ -65,6 +62,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ny_bytecode.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ny_vm.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

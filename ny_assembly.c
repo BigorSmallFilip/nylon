@@ -12,6 +12,27 @@ Ny_Instruction get_string_instruction(const char* str)
 	return -1;
 }
 
+
+
+static int assemble_operand(Ny_ParserState* parser, Ny_BytecodeBlock* bytecode, int i)
+{
+	if (i + 1 >= parser->tokens.count) return 0;
+	Ny_Token* token = (Ny_Token*)parser->tokens.buffer[i + 1];
+
+	switch (token->type)
+	{
+	case Ny_TT_INTLITERAL:
+	{
+		int num = token->numint;
+		Ny_PushBackByteVector(&bytecode->bytecode, &num, sizeof(num));
+	}
+		break;
+
+	default:
+		return 0;
+	}
+}
+
 static Ny_BytecodeBlock* assemble_assembly(Ny_ParserState* parser)
 {
 	Ny_BytecodeBlock* bytecode = Ny_AllocType(Ny_BytecodeBlock);
@@ -32,7 +53,8 @@ static Ny_BytecodeBlock* assemble_assembly(Ny_ParserState* parser)
 		if (ins >= 0)
 		{
 			Ny_PushBackByteVector(&bytecode->bytecode, &ins, sizeof(Ny_Instruction));
-			printf("Ins: %s\n", ny_instruction_strings[ins]);
+
+			i += assemble_operand(parser, bytecode, i);
 		} else
 		{
 			Ny_PushStateMessage(parser->main_state, Ny_MSGT_SYNTAXERROR, curtoken->linenum, "ass", "Invalid instruction %s", curtoken->string);
@@ -42,12 +64,23 @@ static Ny_BytecodeBlock* assemble_assembly(Ny_ParserState* parser)
 		i++;
 	}
 
+	Ny_ResizeByteVector(&bytecode->bytecode, bytecode->bytecode.size);
+
+	printf("Assembly is assembled\nHere is the bytecode:\n");
+	for (int i = 0; i < bytecode->bytecode.size; i++)
+	{
+		printf("%02X ", ((char*)bytecode->bytecode.buffer)[i]);
+	}
+	printf("\n");
+
 	return bytecode;
 
 fail:
 	printf("FREE THINGS!\n");
 	return NULL;
 }
+
+
 
 Ny_BytecodeBlock* Ny_CompileAssembly(Ny_State* state, const char* assembly)
 {
