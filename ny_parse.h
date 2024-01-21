@@ -126,7 +126,8 @@ enum
 	Ny_ET_VARIABLE,
 	Ny_ET_CLOSURE,
 	Ny_ET_FUNCTIONCALL,
-	Ny_NUM_EXPRNODETYPES
+	Ny_NUM_EXPRNODETYPES,
+	Ny_ET_NULL = -1,
 };
 typedef char Ny_ExprNodeType;
 extern const char* ny_exprnodetype_names[Ny_NUM_EXPRNODETYPES];
@@ -182,7 +183,6 @@ void Ny_DestroyExpression(Ny_Expression* expr);
 typedef struct Ny_CodeBlock
 {
 	Ny_Vector statements;
-
 	struct Ny_CodeBlock* parent; /* Used to go up in the tree to the top node */
 	char* filename; /* Only written in the global scope, top node */
 } Ny_CodeBlock;
@@ -289,11 +289,14 @@ typedef struct Ny_Token
 		Ny_Int   numint;
 		Ny_Float numfloat;
 	};
-	unsigned short linenum;
-	short lastonline; /* If this token is the last on a line */
+	int linenum;
+	char indentlevel;
+	Ny_Bool lastonline;
 } Ny_Token;
 
 void Ny_PrintToken(const Ny_Token* token);
+
+
 
 typedef struct
 {

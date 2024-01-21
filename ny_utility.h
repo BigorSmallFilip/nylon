@@ -1,6 +1,7 @@
 #ifndef __Ny_UTILITY_H__
 #define __Ny_UTILITY_H__
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -56,10 +57,13 @@ typedef int32_t Ny_Int;
 
 
 typedef unsigned int Ny_Hash;
+Ny_Hash Ny_HashString(const char* str);
 
 
 
 /* Nylon vector */
+
+#define Ny_MIN_VECTOR_CAPACITY 4
 
 typedef struct
 {
@@ -72,8 +76,6 @@ typedef struct
 
 Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity);
 
-#define Ny_STD_VECTOR_CAPACITY 4
-#define Ny_MIN_VECTOR_CAPACITY 4
 Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity);
 #define Ny_HalfVectorSize(vector) Ny_ResizeVector((vector), (vector)->capacity >> 1)
 #define Ny_DoubleVectorSize(vector) Ny_ResizeVector((vector), (vector)->capacity << 1)
@@ -105,89 +107,11 @@ Ny_Bool Ny_PopBackByteVector(Ny_ByteVector* vector, void** data, size_t size);
 
 
 
-/* Nylon linked list */
-
-typedef struct Ny_ListNode
-{
-	struct Ny_ListNode* prev;
-	struct Ny_ListNode* next;
-} Ny_ListNode;
-
-typedef struct
-{
-	Ny_ListNode* begin;
-	Ny_ListNode* end;
-	size_t count;
-} Ny_List;
-
-/*
-** @brief Pushes an element onto the beginning of a list.
-** @param list The list to push the element onto.
-** @param node Pointer to the element to push.
-*/
-void Ny_PushFrontList(
-	Ny_List* list,
-	Ny_ListNode* node
-);
-
-/*
-** @brief Pushes an element onto the end of a list.
-** @param list The list to push the element onto.
-** @param node Pointer to the element to push.
-*/
-void Ny_PushBackList(
-	Ny_List* list,
-	Ny_ListNode* node
-);
-
-/*
-** @brief Removes the element at the beginning of the list and returns a pointer to it.
-** @param list The list to get the element from.
-** @return A pointer to the element or NULL if the list was empty. Make sure to know
-** the type of the element returned to cast it from the void* returned.
-*/
-void* Ny_PopFrontList(
-	Ny_List* list
-);
-
-/*
-** @brief Removes the element at the end of the list and returns a pointer to it.
-** @param list The list to get the element from.
-** @return A pointer to the element or NULL if the list was empty. Make sure to know
-** the type of the element returned to cast it from the void* returned.
-*/
-void* Ny_PopBackList(
-	Ny_List* list
-);
-
-/*
-** @brief Removes a node from a list and links the surrounding elements together.
-** @param list The list to unlink from.
-** @param node The node to unlink from the list.
-*/
-void Ny_UnlinkFromList(
-	Ny_List* list,
-	Ny_ListNode* node
-);
-
-/*
-** @brief Removes all elements from a list and calling the destroy_func on every element.
-** This does not free the list itself, only empties it.
-** @param list Pointer to the list to empty.
-** @param destroy_func Pointer to a destructor function, or NULL to use Lnn_Free().
-*/
-void Ny_ClearList(
-	Ny_List* list,
-	void(*destroy_func)(void*)
-);
-
-
-
 typedef struct
 {
 	size_t length;
-	char* str;
 	Ny_Hash hash;
+	char* str;
 } Ny_String;
 
 /*
@@ -205,7 +129,7 @@ char* Ny_CopyCutString(
 
 
 
-#ifdef Ny_DEBUG & Ny_DEBUGPRINT
+#ifdef Ny_DEBUG && Ny_DEBUGPRINT
 #define Ny_DebugPrint printf
 #else
 #define Ny_DebugPrint() void

@@ -1,0 +1,50 @@
+
+function sq(n)
+	return n * n
+
+a = 0
+print(sq(5 * (2 + a)))
+
+q = 59
+p = (a = 1 + q) + 10
+
+
+
+sq {
+LOAD_LOCAL 0
+LOAD_LOCAL 0
+BINARY_OP *
+RETURN 0
+}
+
+
+
+_global {
+LOAD_CONST sq
+STORE_GLOBAL 'sq'
+
+LOAD_CONST 6
+STORE_GLOBAL 'a'
+
+LOAD_CONST 'print'
+LOAD_CONST 'sq'
+LOAD_CONST 5
+LOAD_CONST 2
+LOAD_GLOBAL 'a'
+BINARY_OP +
+BINARY_OP *
+CALL 1
+CALL 1
+
+LOAD_CONST 59
+STORE_GLOBAL 'q'
+
+LOAD_CONST 1
+LOAD_GLOBAL 'q'
+BINARY_OP +
+COPY 0
+STORE_GLOBAL 'a'
+LOAD_CONST 10
+BINARY_OP +
+STORE_GLOBAL 'p'
+}

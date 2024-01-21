@@ -226,7 +226,8 @@ static chartype check_chartype(const char c)
 
 static Ny_Token* create_token()
 {
-	Ny_Token* token = malloc(sizeof(Ny_Token)); /* Malloc instead of calloc since this will setup everything manually so no need to 0 out token */
+	Ny_Token* token = Ny_Malloc(sizeof(Ny_Token)); /* Malloc instead of calloc since this will setup everything manually so no need to 0 out token */
+	if (!token) return NULL;
 	token->type = Ny_TT_NULL;
 	token->keywordid = Ny_KW_NULL;
 	token->operatorid = Ny_OP_NULL;
@@ -402,7 +403,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 	parser->linenum = 1;
 	Ny_InitVector(&parser->tokens, Ny_MIN_VECTOR_CAPACITY);
 	parser->sourcecode = sourcecode;
-
+	
 	while (Ny_TRUE)
 	{
 		if (parser->charpos >= Ny_MAX_SOURCECODE_LENGTH)

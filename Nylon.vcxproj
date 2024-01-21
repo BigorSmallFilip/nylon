@@ -135,9 +135,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ny_assembly.c" />
-    <ClCompile Include="ny_bytecode.c" />
-    <ClCompile Include="ny_object.c" />
     <ClCompile Include="ny_parse.c" />
     <ClCompile Include="ny_state.c" />
     <ClCompile Include="ny_tokenize.c" />
@@ -145,16 +142,13 @@
     <ClCompile Include="testmain.c" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="bytecode.txt" />
     <Text Include="philosofy.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ny_assembly.h" />
-    <ClInclude Include="ny_bytecode.h" />
-    <ClInclude Include="ny_object.h" />
     <ClInclude Include="ny_parse.h" />
     <ClInclude Include="ny_state.h" />
     <ClInclude Include="ny_utility.h" />
-    <ClInclude Include="ny_vm.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="test.ny" />

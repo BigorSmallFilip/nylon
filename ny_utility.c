@@ -2,6 +2,17 @@
 
 
 
+Ny_Hash Ny_HashString(const char* str)
+{
+	Ny_Hash hash = 5381;
+	Ny_Hash c;
+	while (c = (Ny_Hash)(*str++))
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+	return hash;
+}
+
+
+
 Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity)
 {
 	vector->buffer = Ny_Calloc(capacity, sizeof(void*));
@@ -88,117 +99,6 @@ Ny_Bool Ny_PopBackByteVector(Ny_ByteVector* vector, void** data, size_t size)
 		if (!Ny_HalfVectorSize(vector)) return Ny_FALSE;
 	}
 	return Ny_TRUE;
-}
-
-
-
-void Ny_PushFrontList(
-	Ny_List* list,
-	Ny_ListNode* node
-)
-{
-	Ny_Assert(list);
-	Ny_Assert(node);
-	if (list->begin == NULL)
-	{
-		node->prev = NULL;
-		node->next = NULL;
-		list->begin = node;
-		list->end = node;
-	} else
-	{
-		node->prev = NULL;
-		node->next = list->begin;
-		list->begin->prev = node;
-		list->begin = node;
-	}
-	list->count++;
-}
-
-void Ny_PushBackList(
-	Ny_List* list,
-	Ny_ListNode* node
-)
-{
-	Ny_Assert(list);
-	Ny_Assert(node);
-	if (list->begin == NULL)
-	{
-		node->prev = NULL;
-		node->next = NULL;
-		list->begin = node;
-		list->end = node;
-	} else
-	{
-		node->prev = list->end;
-		node->next = NULL;
-		list->end->next = node;
-		list->end = node;
-	}
-	list->count++;
-}
-
-void* Ny_PopFrontList(
-	Ny_List* list
-)
-{
-	Ny_ListNode* node = list->begin;
-	Ny_UnlinkFromList(list, node);
-	return node;
-}
-
-void* Ny_PopBackList(
-	Ny_List* list
-)
-{
-	Ny_ListNode* node = list->end;
-	Ny_UnlinkFromList(list, node);
-	return node;
-}
-
-void Ny_UnlinkFromList(
-	Ny_List* list,
-	Ny_ListNode* node
-)
-{
-	if (node->prev)
-		node->prev->next = node->next;
-	else
-		list->begin = node->next;
-
-	if (node->next)
-		node->next->prev = node->prev;
-	else
-		list->end = node->prev;
-
-	node->prev = NULL;
-	node->next = NULL;
-	list->count--;
-}
-
-void Ny_ClearList(
-	Ny_List* list,
-	void(*destroy_func)(void*)
-)
-{
-	if (!list) return;
-	if (list->count <= 0) return;
-	if (list->begin == NULL) return;
-	if (list->end == NULL) return;
-
-	Ny_ListNode* iterator = list->begin;
-	while (iterator)
-	{
-		Ny_ListNode* delblock = iterator;
-		iterator = iterator->next;
-		if (destroy_func)
-			destroy_func(delblock);
-		else
-			free(delblock);
-	}
-	list->begin = NULL;
-	list->end = NULL;
-	list->count = 0;
 }
 
 
