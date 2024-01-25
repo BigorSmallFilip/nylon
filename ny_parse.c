@@ -141,7 +141,7 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 {
 	Ny_ParserState parser = { 0 };
 	parser.main_state = state;
-	parser.tabsize = 4;
+	parser.tabsize = state->tabsize;
 	parser.sourcecode_filename = "gruplin";
 
 	clock_t lexer_start = clock();

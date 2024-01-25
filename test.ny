@@ -1,3 +1,5 @@
+1.1.1
+
 function find_longest_word(str)
 	words = []
 	current_word = ''

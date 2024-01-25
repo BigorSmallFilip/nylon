@@ -7,6 +7,7 @@
 Ny_State* Ny_CreateState()
 {
 	Ny_State* state = Ny_AllocType(Ny_State);
+	
 	return state;
 }
 

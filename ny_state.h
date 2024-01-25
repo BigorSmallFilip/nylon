@@ -7,6 +7,7 @@ typedef struct
 {
 	Ny_Vector stack;
 	Ny_Vector messages;
+	int tabsize;        /* Number of spaces equivalent to a tab. For indentation */
 } Ny_State;
 
 Ny_State* Ny_CreateState();
