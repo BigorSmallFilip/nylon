@@ -23,6 +23,9 @@ Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity)
 
 Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity)
 {
+	Ny_Assert(vector);
+	Ny_Assert(vector->buffer);
+	Ny_Assert(vector->capacity >= Ny_MIN_VECTOR_CAPACITY);
 	if (newcapacity < vector->count)
 	{
 		return Ny_FALSE;
@@ -35,6 +38,8 @@ Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity)
 
 Ny_Bool Ny_PushBackVector(Ny_Vector* vector, void* item)
 {
+	Ny_Assert(vector);
+	Ny_Assert(vector->buffer);
 	if (vector->count + 1 > vector->capacity)
 	{
 		if (!Ny_DoubleVectorSize(vector)) return Ny_FALSE;
@@ -46,6 +51,8 @@ Ny_Bool Ny_PushBackVector(Ny_Vector* vector, void* item)
 
 void* Ny_PopBackVector(Ny_Vector* vector)
 {
+	Ny_Assert(vector);
+	Ny_Assert(vector->buffer);
 	if (vector->count <= 0) return NULL;
 	void* item = vector->buffer[vector->count - 1];
 	vector->count--;
