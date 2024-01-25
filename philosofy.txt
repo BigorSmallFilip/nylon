@@ -40,16 +40,30 @@ if (true) {
 
 Wouldn't it be interesting if significant whitespace?
 
-if brug
-	print("dingus")
-else
-	print("wat")
+function find_longest_word(str)
+	words = []
+	current_word = ''
 
-expr = funccall(50)
+	# Get all the words
+	for c in str
+		if c != ' '
+			current_word += c
+		else
+			words.push(current_word)
+			current_word = ''
 
-for i = 0, 10
-	print(i)
+	# Find the longest of them
+	longest_word = ''
+	for word in words
+		if word.length > longest_word.length
+			longest_word = word
 
+	return longest_word
+
+
+
+if 5 == 5 print("5 is 5")
+ return
 
 
 

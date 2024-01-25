@@ -1,5 +1,3 @@
-1.1.1
-
 function find_longest_word(str)
 	words = []
 	current_word = ''
@@ -19,3 +17,9 @@ function find_longest_word(str)
 			longest_word = word
 
 	return longest_word
+
+
+
+function secundo()
+	if 5 == 5
+	print('e')

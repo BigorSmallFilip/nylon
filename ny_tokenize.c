@@ -256,7 +256,8 @@ static Ny_Token* create_token()
 	parser->linenum,             \
 	parser->sourcecode_filename, \
 	format,                      \
-	__VA_ARGS__)
+	__VA_ARGS__);                \
+        parser->errorcount++
 
 
 
@@ -478,7 +479,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 	if (!Ny_InitVector(&parser->tokens, Ny_MIN_VECTOR_CAPACITY)) return Ny_FALSE;
 	parser->sourcecode = sourcecode;
 	short line_indentlevel = 0;
-	Ny_Bool reading_indent = Ny_FALSE;
+	Ny_Bool reading_indent = Ny_TRUE;
 	
 	while (Ny_TRUE)
 	{
@@ -511,7 +512,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		{
 			/* If an endline char is found then the previous token gets the lastonline flag set */
 			Ny_Token* lasttoken = (Ny_Token*)parser->tokens.buffer[parser->tokens.count - 1];
-			lasttoken->lastonline = Ny_TRUE;
+			if (lasttoken) lasttoken->lastonline = Ny_TRUE;
 			parser->charpos++;
 			parser->linenum++;
 			line_indentlevel = 0;
@@ -525,7 +526,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 				else if (c == '\t') line_indentlevel += parser->tabsize;
 			}
 			parser->charpos++;
-			break;
+			continue;
 
 		default:
 			syntax_error("Invalid character '%c'", c);
@@ -544,9 +545,6 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 				reading_indent = Ny_FALSE;
 			}
 			Ny_PushBackVector(&parser->tokens, token);
-		} else
-		{
-			parser->errorcount++;
 		}
 	}
 
