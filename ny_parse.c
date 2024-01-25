@@ -129,68 +129,14 @@ static Ny_Token* get_current_token(const Ny_ParserState* parser)
 */
 static Ny_Token* get_next_token(Ny_ParserState* parser)
 {
+	parser->curtoken++;
 	if (parser->curtoken >= parser->tokens.count) return NULL;
 	return parser->tokens.buffer[parser->curtoken];
 }
 
-
-
-/* ================ Expression parsing ================ */
-
-static Ny_Expression* parse_expression(Ny_ParserState* parser, int indentlevel)
-{
-
-}
-
-
-
-static Ny_Statement* parse_if_statement(
-	Ny_ParserState* parser,
-	int indentlevel,
-	Ny_Token* iftoken
-)
-{
-
-}
-
-
-
-/**
- * @brief Parses a statement
- * @param parser Parser state
- * @param indentlevel The indentation level of this block. The indentlevel of the first token of this statement should be equal to this.
- * A higher level than this is an error. A lower ends the block and returns NULL.
- * @return A statement pointer on success and the parser->curtoken is set at the token after the statement. NULL if the block should end.
-*/
-static Ny_Statement* parse_statement(
-	Ny_ParserState* parser,
-	int indentlevel
-)
-{
-	Ny_Token* token = get_current_token(parser);
-	if (!token) return NULL;
-	if (token->indentlevel > indentlevel)
-	{
-		syntax_error("Invalid indentation");
-		return NULL;
-	}
-	if (token->indentlevel != indentlevel && token->indentlevel != -1) return NULL; /* Different indentlevel, block has ended */
-
-	switch (token->keywordid)
-	{
-	case Ny_KW_IF: return parse_if_statement(parser, indentlevel, token);
-	default:
-		break;
-	}
-
-	return NULL;
-}
-
-
-
 /**
  * @brief Attemps to find the next token on indentlevel or lower. This is for error recovery.
- * parser->curtoken will be set to this token if it is found. It will be set to parser->tokens.count if it doesn't find any 
+ * parser->curtoken will be set to this token if it is found. It will be set to parser->tokens.count if it doesn't find any
  * @param parser Parser state
  * @param indentlevel The indent level to exit to
 */
@@ -199,21 +145,103 @@ static void find_next_token_on_indentlevel(
 	int indentlevel
 )
 {
-	printf("Attempting recovery from ");
-	Ny_PrintToken(parser->tokens.buffer[parser->curtoken]);
+	//printf("Attempting recovery from "); Ny_PrintToken(parser->tokens.buffer[parser->curtoken]);
 	while (++parser->curtoken < parser->tokens.count)
 	{
 		Ny_Token* token = parser->tokens.buffer[parser->curtoken];
 		if (token->indentlevel >= 0 && token->indentlevel <= indentlevel)
 		{
-			printf(" to ");
-			Ny_PrintToken(parser->tokens.buffer[parser->curtoken]);
-			putchar('\n');
+			//printf(" to "); Ny_PrintToken(parser->tokens.buffer[parser->curtoken]); putchar('\n');
 			return;
 		}
 	}
-	printf(" to EOF\n");
+	//printf(" to EOF\n");
 }
+
+
+
+static Ny_CodeBlock* parse_codeblock(Ny_ParserState* parser, int parent_indentlevel);
+
+
+
+/* ================ Expression parsing ================ */
+
+static Ny_Expression* parse_expression(Ny_ParserState* parser)
+{
+	Ny_Token* token = get_current_token(parser);
+	printf("Parsing expression starting with '"); Ny_PrintToken(token); printf("'\n");
+
+	parser->curtoken += 3;
+	return NULL;
+}
+
+
+
+static Ny_Statement* parse_if_statement(
+	Ny_ParserState* parser
+)
+{
+	Ny_Token* iftoken = get_current_token(parser);
+	Ny_Token* conditiontoken = get_next_token(parser);
+	if (!conditiontoken)
+	{
+		syntax_error("If statement needs a condition expression");
+		return NULL;
+	}
+	Ny_Expression* condition = parse_expression(parser);
+
+	Ny_CodeBlock* trueblock = NULL;
+	Ny_CodeBlock* falseblock = NULL;
+
+	Ny_Token* trueblock_token = get_current_token(parser);
+	if (trueblock_token->indentlevel == -1 || trueblock_token->indentlevel > iftoken->indentlevel)
+	{
+		trueblock = parse_codeblock(parser, iftoken->indentlevel);
+		Ny_Token* elsetoken = get_current_token(parser);
+		if (elsetoken && elsetoken->keywordid == Ny_KW_ELSE)
+		{
+			
+		}
+	}
+	
+	
+
+	Ny_Statement* stmt = Ny_AllocType(Ny_Statement);
+	stmt->type = Ny_ST_IF;
+	stmt->linenum = iftoken->linenum;
+	stmt->stmt_if.condition = condition;
+	stmt->stmt_if.block_ontrue = trueblock;
+	stmt->stmt_if.block_onfalse = falseblock;
+	return stmt;
+}
+
+
+
+/**
+ * @brief Parses a statement
+ * @param parser Parser state
+ * A higher level than this is an error. A lower ends the block and returns NULL.
+ * @return A statement pointer on success and the parser->curtoken is set at the token after the statement. NULL if the block should end.
+*/
+static Ny_Statement* parse_statement(
+	Ny_ParserState* parser
+)
+{
+	Ny_Token* token = get_current_token(parser);
+	printf("Parsing statement starting with '"); Ny_PrintToken(token); printf("'\n");
+	
+	Ny_Statement* stmt = NULL;
+	switch (token->keywordid)
+	{
+	case Ny_KW_IF: stmt = parse_if_statement(parser);
+	default:
+		break;
+	}
+
+	return stmt;
+}
+
+
 
 static Ny_CodeBlock* parse_codeblock(
 	Ny_ParserState* parser,
@@ -225,17 +253,29 @@ static Ny_CodeBlock* parse_codeblock(
 	if (!Ny_InitVector(&block->statements));
 	Ny_Token* block_firsttoken = get_current_token(parser);
 	if (!block_firsttoken) return NULL;
-	int indentlevel = block_firsttoken->indentlevel;
+	int block_indentlevel = block_firsttoken->indentlevel;
 
 	while (parser->curtoken < parser->tokens.count)
 	{
-		//Ny_PrintToken(parser->tokens.buffer[parser->curtoken]); putchar('\n');
+		Ny_Token* token = get_current_token(parser);
+		if (!token) return NULL;
+		if (token->indentlevel > block_indentlevel) /* Higher indentlevel, syntax error */
+		{
+			syntax_error("Invalid indentation");
+			find_next_token_on_indentlevel(parser, block_indentlevel);
+			continue;
+		}
+		if (token->indentlevel != -1 && token->indentlevel < block_indentlevel) break; /* Lower indentlevel, block has ended */
+		/* The cast to unsigned int is because when block_indentlevel = -1 it overflows. */
+		/* That makes all indentlevels other than -1 end the block */
 
-		Ny_Statement* stmt = parse_statement(parser, indentlevel);
+		Ny_Statement* stmt = parse_statement(parser);
 		if (!stmt)
 		{
-			find_next_token_on_indentlevel(parser, indentlevel);
-		} else
+			find_next_token_on_indentlevel(parser, block_indentlevel);
+			break;
+		}
+		else
 		{
 			Ny_PushBackVector(&block->statements, stmt);
 		}
@@ -261,7 +301,7 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 	clock_t lexer_time = clock() - lexer_start;
 
 	Ny_PrintSourceCodeTokens(&parser);
-	
+
 	clock_t parser_start = clock();
 	Ny_CodeBlock* globalscope_block = parse_codeblock(&parser, 0, 0);
 	clock_t parser_time = clock() - parser_start;

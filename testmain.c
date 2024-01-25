@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 	Ny_State* state = Ny_CreateState();
 
 	char* testfile = load_string_from_file("test.ny");
-
+	
 	Ny_ParseSourceCode(state, testfile);
 
 	free(testfile);

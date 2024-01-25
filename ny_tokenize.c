@@ -228,7 +228,6 @@ static chartype check_chartype(const char c)
 	if (c == '\n' || c == ';') return CT_ENDLINE; /* Semicolon acts the same as endline */
 	if (is_quote_char(c))      return CT_QUOTE;
 	if (c == '#')              return CT_COMMENT;
-	if (c == '\n')             return CT_ENDLINE;
 	return CT_NULL;
 }
 
@@ -437,7 +436,20 @@ static Ny_Token* read_string_token(
 	for (int i = start + 1; i < Ny_MAX_SOURCECODE_LENGTH; i++)
 	{
 		char c = sourcecode[i];
-		if (is_invalid(c) || is_quote_char(c))
+		if (c == '\0')
+		{
+			syntax_error("String doesn't have closing quotation marks");
+			parser->charpos = i;
+			return NULL;
+		}
+		if (is_invalid(c))
+		{
+			syntax_error("Invalid character in string");
+			parser->charpos = i;
+			/* TODO: Make it recover to the closing quote mark */
+			return NULL;
+		}
+		if (is_quote_char(c))
 		{
 			end = i + 1;
 			break;
@@ -461,9 +473,9 @@ static void read_comment(
 	for (int i = start + 1; i < Ny_MAX_SOURCECODE_LENGTH; i++)
 	{
 		char c = sourcecode[i];
-		if (is_invalid(c) || c == '\n')
+		if (c == '\0' || c == '\n')
 		{
-			end = i + 1;
+			end = i;
 			break;
 		}
 	}
@@ -481,7 +493,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 	short line_indentlevel = 0;
 	Ny_Bool reading_indent = Ny_TRUE;
 	
-	while (Ny_TRUE)
+	while (1)
 	{
 		if (parser->charpos >= Ny_MAX_SOURCECODE_LENGTH)
 		{
@@ -493,7 +505,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		if (c == '\0') break;
 		if (c < 0)
 		{
-			syntax_error("Non-ASCII character");
+			syntax_error("Non-ASCII character %X", c);
 			parser->charpos++;
 			continue;
 		}
@@ -511,12 +523,19 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		case CT_ENDLINE:
 		{
 			/* If an endline char is found then the previous token gets the lastonline flag set */
-			Ny_Token* lasttoken = (Ny_Token*)parser->tokens.buffer[parser->tokens.count - 1];
-			if (lasttoken) lasttoken->lastonline = Ny_TRUE;
+			if (parser->tokens.count > 0)
+			{
+				Ny_Token* lasttoken = (Ny_Token*)parser->tokens.buffer[parser->tokens.count - 1];
+				lasttoken->lastonline = Ny_TRUE;
+			}
+			/* Only real endlines reset the indentation, not semicolons which count as endlines */
+			if (c == '\n')
+			{
+				parser->linenum++;
+				line_indentlevel = 0;
+				reading_indent = Ny_TRUE;
+			}
 			parser->charpos++;
-			parser->linenum++;
-			line_indentlevel = 0;
-			reading_indent = Ny_TRUE;
 			break;
 		}
 		case CT_SPACE:
@@ -574,7 +593,7 @@ void Ny_PrintSourceCodeTokens(Ny_ParserState* parser)
 	for (int i = 0; i < (int)parser->tokens.count; i++)
 	{
 		Ny_Token* token = parser->tokens.buffer[i];
-		for (int intent = 0; intent < token->indentlevel; intent++)
+		for (int intent = 0; intent < 1 + token->indentlevel; intent++)
 			putchar(' ');
 		Ny_PrintToken(token);
 		putchar(token->lastonline ? '\n' : ' ');
