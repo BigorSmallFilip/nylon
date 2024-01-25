@@ -88,14 +88,54 @@ void Ny_FreeExpression(Ny_Expression* expr)
 	Ny_Free(expr);
 }
 
+void Ny_FreeCodeBlock(Ny_CodeBlock* block)
+{
+	if (!block) return;
+	printf("Unimplemented\n");
+}
+
 
 
 /* ================ Parsing tokens to build the AST ================ */
 
 
 
+/**
+ * @brief Gets the token at parser->curtoken and then increments parser->curtoken. Note that the only index increments *after* getting the token!
+ * @param parser Parser state
+ * @return The token at parser->curtoken before it is incremented.
+*/
+static Ny_Token* get_next_token(Ny_ParserState* parser)
+{
+	if (parser->curtoken >= parser->tokens.count) return NULL;
+	return parser->tokens.buffer[parser->curtoken++];
+}
 
 
+
+static Ny_Statement* parse_statement(Ny_ParserState* parser)
+{
+	get_next_token(parser);
+	return NULL;
+}
+
+static Ny_CodeBlock* parse_codeblock(Ny_ParserState* parser, int indentlevel)
+{
+	Ny_CodeBlock* block = Ny_AllocType(Ny_CodeBlock);
+	if (!block) return NULL;
+	
+
+	while (parser->curtoken < parser->tokens.count)
+	{
+		Ny_Statement* stmt = parse_statement(parser);
+
+	}
+	return block;
+}
+
+
+
+#include <time.h>
 
 Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 {
@@ -103,18 +143,35 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 	parser.main_state = state;
 	parser.tabsize = 4;
 	parser.sourcecode_filename = "gruplin";
-	Ny_TokenizeSourceCode(&parser, sourcecode);
 
-	Ny_DebugPrint("Tokenization process finished\n");
+	clock_t lexer_start = clock();
+	if (!Ny_TokenizeSourceCode(&parser, sourcecode)) return NULL;
+	clock_t lexer_time = clock() - lexer_start;
+
+	//Ny_PrintSourceCodeTokens(&parser);
+	
+	clock_t parser_start = clock();
+	Ny_CodeBlock* globalscope_block = parse_codeblock(&parser, 0);
+	clock_t parser_time = clock() - parser_start;
+	
+	if (!globalscope_block) goto fail_0;
+	Ny_AST* ast = Ny_AllocType(Ny_AST);
+	if (!ast) goto fail_1;
+	ast->globalscope_block = globalscope_block;
+
+	printf("Lexing took: %dms\n", lexer_time);
+	printf("Parsing took: %dms\n\n", parser_time);
+
+	return ast;
+
+
+fail_1:
+	Ny_FreeCodeBlock(globalscope_block);
+fail_0:
 	for (int i = 0; i < (int)parser.tokens.count; i++)
 	{
-		Ny_Token* token = parser.tokens.buffer[i];
-		for (int intent = 0; intent < token->indentlevel; intent++)
-			putchar(' ');
-		Ny_PrintToken(token);
-		putchar(token->lastonline ? '\n' : ' ');
+		Ny_FreeToken(&parser.tokens.buffer[i]);
 	}
-	putchar('\n');
-
+	Ny_Free(parser.tokens.buffer);
 	return NULL;
 }

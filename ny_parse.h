@@ -318,13 +318,15 @@ typedef struct
 
 Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode);
 
+void Ny_PrintSourceCodeTokens(Ny_ParserState* parser);
+
 
 
 
 
 typedef struct Ny_AST
 {
-	Ny_CodeBlock global_codeblock;
+	Ny_CodeBlock* globalscope_block;
 } Ny_AST;
 
 Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode);

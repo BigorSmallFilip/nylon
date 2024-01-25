@@ -44,10 +44,7 @@ int main(int argc, char** argv)
 
 	char* testfile = load_string_from_file("test.ny");
 
-	clock_t start = clock();
 	Ny_ParseSourceCode(state, testfile);
-	clock_t time = clock() - start;
-	printf("\nParsing took: %dms\n\n", time);
 
 	free(testfile);
 	Ny_PrintAllStateMessages(state);

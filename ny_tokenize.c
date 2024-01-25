@@ -564,3 +564,22 @@ fail:
 	Ny_Free(parser->tokens.buffer);
 	return Ny_FALSE;
 }
+
+
+
+void Ny_PrintSourceCodeTokens(Ny_ParserState* parser)
+{
+	if (!parser) return;
+	if (!parser->tokens.buffer || parser->tokens.count <= 0) return;
+
+	printf(" === Tokens ===\n");
+	for (int i = 0; i < (int)parser->tokens.count; i++)
+	{
+		Ny_Token* token = parser->tokens.buffer[i];
+		for (int intent = 0; intent < token->indentlevel; intent++)
+			putchar(' ');
+		Ny_PrintToken(token);
+		putchar(token->lastonline ? '\n' : ' ');
+	}
+	putchar('\n');
+}
