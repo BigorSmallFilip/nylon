@@ -23,7 +23,7 @@ void Ny_PrintExprNode(const Ny_ExprNode* node)
 	}
 }
 
-void Ny_DestroyExprNode(Ny_ExprNode* node)
+void Ny_FreeExprNode(Ny_ExprNode* node)
 {
 	if (!node) return;
 	switch (node->type)
@@ -77,12 +77,12 @@ void Ny_PrintExpressionTree(const Ny_Expression* expr)
 	recursive_print_exprnode(expr->topnode, 0);
 }
 
-void Ny_DestroyExpression(Ny_Expression* expr)
+void Ny_FreeExpression(Ny_Expression* expr)
 {
 	if (!expr) return;
 	for (int i = 0; i < (int)expr->nodes.count; i++)
 	{
-		Ny_DestroyExprNode(expr->nodes.buffer[i]);
+		Ny_FreeExprNode(expr->nodes.buffer[i]);
 	}
 	Ny_Free(expr->nodes.buffer);
 	Ny_Free(expr);
@@ -90,22 +90,29 @@ void Ny_DestroyExpression(Ny_Expression* expr)
 
 
 
+/* ================ Parsing tokens to build the AST ================ */
+
+
+
+
 
 
 Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 {
-	Ny_DebugPrint("Parsing source code:\n%s\n", sourcecode);
-
 	Ny_ParserState parser = { 0 };
 	parser.main_state = state;
+	parser.tabsize = 4;
+	parser.sourcecode_filename = "gruplin";
 	Ny_TokenizeSourceCode(&parser, sourcecode);
 
 	Ny_DebugPrint("Tokenization process finished\n");
 	for (int i = 0; i < (int)parser.tokens.count; i++)
 	{
 		Ny_Token* token = parser.tokens.buffer[i];
+		for (int intent = 0; intent < token->indentlevel; intent++)
+			putchar(' ');
 		Ny_PrintToken(token);
-		putchar(' ');
+		putchar(token->lastonline ? '\n' : ' ');
 	}
 	putchar('\n');
 

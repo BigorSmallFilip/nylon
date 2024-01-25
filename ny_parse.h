@@ -157,7 +157,7 @@ typedef struct Ny_ExprNode
 
 void Ny_PrintExprNode(const Ny_ExprNode* node);
 
-void Ny_DestroyExprNode(Ny_ExprNode* node);
+void Ny_FreeExprNode(Ny_ExprNode* node);
 
 typedef struct
 {
@@ -168,10 +168,10 @@ typedef struct
 void Ny_PrintExpressionTree(const Ny_Expression* expr);
 
 /*
-** @brief Destroys an expression and all its nodes recursively
-** @param expr Expression to destroy.
+** @brief Frees an expression and all its nodes recursively
+** @param expr Expression to free.
 */
-void Ny_DestroyExpression(Ny_Expression* expr);
+void Ny_FreeExpression(Ny_Expression* expr);
 
 
 
@@ -190,10 +190,10 @@ typedef struct Ny_CodeBlock
 void Ny_PrintCodeTree(const Ny_CodeBlock* block);
 
 /*
-** @brief Destroys a code block and all its child nodes recursively.
-** @param block Block to destroy.
+** @brief Frees a code block and all its child nodes recursively.
+** @param block Block to free.
 */
-void Ny_DestroyCodeBlock(Ny_CodeBlock* block);
+void Ny_FreeCodeBlock(Ny_CodeBlock* block);
 
 
 
@@ -256,10 +256,10 @@ typedef struct Ny_Statement
 const char* ny_statementtype_names[Ny_NUM_STATEMENTTYPES];
 
 /*
-** @brief Destroys a statement and all its child nodes recursively.
-** @param stmt Statement to destroy.
+** @brief Frees a statement and all its child nodes recursively.
+** @param stmt Statement to free.
 */
-void Ny_DestroyStatement(Ny_Statement* stmt);
+void Ny_FreeStatement(Ny_Statement* stmt);
 
 
 
@@ -290,19 +290,23 @@ typedef struct Ny_Token
 		Ny_Float numfloat;
 	};
 	int linenum;
-	char indentlevel;
-	Ny_Bool lastonline;
+	short indentlevel;          /* The indentation of the line of this token if it is the first on the line. -1 if not the first token on the line */
+	Ny_Bool lastonline;         /* If this token is the last on a line. For expressions ending without semicolons */
 } Ny_Token;
 
 void Ny_PrintToken(const Ny_Token* token);
+
+void Ny_FreeToken(Ny_Token* token);
 
 
 
 typedef struct
 {
 	Ny_State* main_state;
+	const char* sourcecode_filename;
 	const char* sourcecode;
-	int charpos;
+	int tabsize;            /* Number of spaces equivalent to a tab. For indentation */
+	int charpos;            /* Lexer character index */
 	int linenum;
 	int errorcount;
 	Ny_Vector tokens;

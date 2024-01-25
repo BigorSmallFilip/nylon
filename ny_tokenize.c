@@ -185,6 +185,14 @@ void Ny_PrintToken(const Ny_Token* token)
 	}
 }
 
+void Ny_FreeToken(Ny_Token* token)
+{
+	if (!token) return;
+	if (token->type == Ny_TT_STRINGLITERAL || token->type == Ny_TT_IDENTIFIER)
+		Ny_Free(token->string);
+	Ny_Free(token);
+}
+
 
 
 /* ================ Tokenization ================*/
@@ -235,8 +243,20 @@ static Ny_Token* create_token()
 	token->string = NULL;
 	token->lastonline = Ny_FALSE;
 	token->linenum = -1;
+	token->indentlevel = -1;
 	return token;
 }
+
+
+
+#define syntax_error(format, ...)    \
+	Ny_PushStateMessage(         \
+	parser->main_state,          \
+	Ny_MSGT_SYNTAXERROR,         \
+	parser->linenum,             \
+	parser->sourcecode_filename, \
+	format,                      \
+	__VA_ARGS__)
 
 
 
@@ -250,14 +270,22 @@ static Ny_Token* read_alpha_token(
 	for (int i = start + 1; i < Ny_MAX_SOURCECODE_LENGTH; i++)
 	{
 		char c = sourcecode[i];
-		if (!is_invalid(c) && !is_alpha(c) && !isdigit(c))
+		if (is_invalid(c))
+		{
+			syntax_error("Invalid character");
+			end = i;
+			goto fail_0;
+		}
+		if (!is_alpha(c) && !isdigit(c))
 		{
 			end = i;
 			break;
 		}
 	}
 	Ny_Token* token = create_token();
+	if (!token) goto fail_0;
 	char* cutstring = Ny_CopyCutString(sourcecode, start, end - start);
+	if (!cutstring) goto fail_1;
 	token->keywordid = Ny_GetKeyword(cutstring);
 	if (token->keywordid == Ny_KW_NULL)
 	{
@@ -267,10 +295,16 @@ static Ny_Token* read_alpha_token(
 	{
 		token->type = Ny_TT_KEYWORD;
 		token->string = NULL;
-		free(cutstring);
+		Ny_Free(cutstring); /* Keyword doesn't need the string */
 	}
 	parser->charpos = end;
 	return token;
+
+fail_1:
+	Ny_Free(token);
+fail_0:
+	parser->charpos = end;
+	return NULL;
 }
 
 static Ny_Token* read_number_token(
@@ -286,30 +320,34 @@ static Ny_Token* read_number_token(
 		char c = sourcecode[i];
 		if (is_invalid(c))
 		{
-			printf("Invalid char");
-			break;
+			syntax_error("Invalid character in number");
+			end = i;
+			goto fail_0;
 		} else if (c == '.')
 		{
 			if (decimalpoint)
 			{
-				//Lnn_PushParserSyntaxError(linenum, "Two decimal points in one number");
-				printf("Two decimal points in one number");
-				return NULL;
+				syntax_error("Two decimal points in one number");
+				end = i;
+				goto fail_0;
 			}
 			decimalpoint = Ny_TRUE;
 		} else if (!isdigit(c))
 		{
 			if (is_alpha(c))
 			{
-				//Lnn_PushParserSyntaxError(linenum, "Letter character '%c' directly after number", sourcecode[i]);
-				return NULL;
+				syntax_error("Letter directly after number");
+				end = i;
+				goto fail_0;
 			}
 			end = i;
 			break;
 		}
 	}
 	Ny_Token* token = create_token();
+	if (!token) goto fail_0;
 	char* string = Ny_CopyCutString(sourcecode, start, end - start);
+	if (!string) goto fail_1;
 	if (decimalpoint)
 	{
 		token->numfloat = Ny_StringToFloat(string, NULL);
@@ -319,9 +357,15 @@ static Ny_Token* read_number_token(
 		token->numint = Ny_StringToInt(string, NULL, 10);
 		token->type = Ny_TT_INTLITERAL;
 	}
-	free(string);
+	Ny_Free(string);
 	parser->charpos = end;
 	return token;
+
+fail_1:	
+	Ny_Free(token);
+fail_0:	
+	parser->charpos = end;
+	return NULL;
 }
 
 static Ny_Token* read_operator_token(
@@ -334,7 +378,13 @@ static Ny_Token* read_operator_token(
 	char opstring[3] = { 0 };
 	opstring[0] = sourcecode[start];
 	char opchar2 = sourcecode[start + 1];
-	if (!is_invalid(opchar2) && is_operator_char(opchar2))
+	if (is_invalid(opchar2))
+	{
+		syntax_error("Invalid character in number");
+		end += 2;
+		goto fail;
+	}
+	if (is_operator_char(opchar2))
 	{
 		opstring[1] = opchar2;
 		end = start + 2;
@@ -343,14 +393,19 @@ static Ny_Token* read_operator_token(
 	Ny_OperatorID id = Ny_GetOperator(&opstring);
 	if (Ny_OperatorInvalid(id))
 	{
-		printf("Invalid operator\n");
-		return NULL;
+		syntax_error("Invalid operator '%s'", opstring);
+		goto fail;
 	}
 	Ny_Token* token = create_token();
+	if (!token) goto fail;
 	token->operatorid = id;
 	token->type = Ny_TT_OPERATOR;
 	parser->charpos = end;
 	return token;
+
+fail:
+	parser->charpos = end;
+	return NULL;
 }
 
 static Ny_Token* read_separator_token(
@@ -381,7 +436,7 @@ static Ny_Token* read_string_token(
 	for (int i = start + 1; i < Ny_MAX_SOURCECODE_LENGTH; i++)
 	{
 		char c = sourcecode[i];
-		if (!is_invalid(c) && is_quote_char(c))
+		if (is_invalid(c) || is_quote_char(c))
 		{
 			end = i + 1;
 			break;
@@ -395,20 +450,41 @@ static Ny_Token* read_string_token(
 	return token;
 }
 
+static void read_comment(
+	Ny_ParserState* parser,
+	const char* sourcecode
+)
+{
+	int start = parser->charpos;
+	int end = -1;
+	for (int i = start + 1; i < Ny_MAX_SOURCECODE_LENGTH; i++)
+	{
+		char c = sourcecode[i];
+		if (is_invalid(c) || c == '\n')
+		{
+			end = i + 1;
+			break;
+		}
+	}
+	parser->charpos = end;
+}
+
 
 
 Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 {
 	parser->charpos = 0;
 	parser->linenum = 1;
-	Ny_InitVector(&parser->tokens, Ny_MIN_VECTOR_CAPACITY);
+	if (!Ny_InitVector(&parser->tokens, Ny_MIN_VECTOR_CAPACITY)) return Ny_FALSE;
 	parser->sourcecode = sourcecode;
+	short line_indentlevel = 0;
+	Ny_Bool reading_indent = Ny_FALSE;
 	
 	while (Ny_TRUE)
 	{
 		if (parser->charpos >= Ny_MAX_SOURCECODE_LENGTH)
 		{
-			printf("ERROR! Sourcecode exceeds max length of " Ny_Stringify(Ny_MAX_SOURCECODE_LENGTH) " characters.\n");
+			syntax_error("Sourcecode exceeds max length of " Ny_Stringify(Ny_MAX_SOURCECODE_LENGTH) " characters");
 			break;
 		}
 
@@ -416,7 +492,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		if (c == '\0') break;
 		if (c < 0)
 		{
-			printf("ERROR! Source code contains invalid character on line %i. Nylon currently only supports ASCII.\n", parser->linenum);
+			syntax_error("Non-ASCII character");
 			parser->charpos++;
 			continue;
 		}
@@ -430,24 +506,43 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 		case CT_OPERATOR:  token = read_operator_token(parser, sourcecode); break;
 		case CT_SEPARATOR: token = read_separator_token(parser, c); break;
 		case CT_QUOTE:     token = read_string_token(parser, sourcecode); break;
+		case CT_COMMENT:   read_comment(parser, sourcecode); continue;
 		case CT_ENDLINE:
 		{
 			/* If an endline char is found then the previous token gets the lastonline flag set */
 			Ny_Token* lasttoken = (Ny_Token*)parser->tokens.buffer[parser->tokens.count - 1];
 			lasttoken->lastonline = Ny_TRUE;
-		} /* Fall through */
+			parser->charpos++;
+			parser->linenum++;
+			line_indentlevel = 0;
+			reading_indent = Ny_TRUE;
+			break;
+		}
 		case CT_SPACE:
+			if (reading_indent)
+			{
+				if (c == ' ') line_indentlevel++;
+				else if (c == '\t') line_indentlevel += parser->tabsize;
+			}
 			parser->charpos++;
 			break;
+
 		default:
-			printf("Invalid character in source code!\n");
+			syntax_error("Invalid character '%c'", c);
 			parser->charpos++;
 			break;
 		}
 
+		if (parser->charpos < 0) goto fail;
+
 		if (token)
 		{
 			token->linenum = parser->linenum;
+			if (reading_indent)
+			{
+				token->indentlevel = line_indentlevel;
+				reading_indent = Ny_FALSE;
+			}
 			Ny_PushBackVector(&parser->tokens, token);
 		} else
 		{
@@ -459,5 +554,13 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 	Ny_Token* lasttoken = Ny_VectorBack(parser->tokens, Ny_Token*);
 	if (lasttoken) lasttoken->lastonline = Ny_TRUE;
 
-	return parser;
+	return Ny_TRUE;
+
+fail:
+	for (int i = 0; i < parser->tokens.count; i++)
+	{
+		Ny_FreeToken(parser->tokens.buffer[i]);
+	}
+	Ny_Free(parser->tokens.buffer);
+	return Ny_FALSE;
 }

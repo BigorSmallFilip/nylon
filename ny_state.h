@@ -11,7 +11,7 @@ typedef struct
 
 Ny_State* Ny_CreateState();
 
-void Ny_DestroyState(Ny_State* state);
+void Ny_FreeState(Ny_State* state);
 
 
 
