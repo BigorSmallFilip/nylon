@@ -222,6 +222,7 @@ static Ny_CodeBlock* parse_codeblock(
 {
 	Ny_CodeBlock* block = Ny_AllocType(Ny_CodeBlock);
 	if (!block) return NULL;
+	if (!Ny_InitVector(&block->statements));
 	Ny_Token* block_firsttoken = get_current_token(parser);
 	if (!block_firsttoken) return NULL;
 	int indentlevel = block_firsttoken->indentlevel;

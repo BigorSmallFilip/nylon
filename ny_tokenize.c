@@ -476,7 +476,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 {
 	parser->charpos = 0;
 	parser->linenum = 1;
-	if (!Ny_InitVector(&parser->tokens, Ny_MIN_VECTOR_CAPACITY)) return Ny_FALSE;
+	if (!Ny_InitVector(&parser->tokens)) return Ny_FALSE;
 	parser->sourcecode = sourcecode;
 	short line_indentlevel = 0;
 	Ny_Bool reading_indent = Ny_TRUE;

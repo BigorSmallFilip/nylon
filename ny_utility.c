@@ -13,8 +13,17 @@ Ny_Hash Ny_HashString(const char* str)
 
 
 
-Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity)
+Ny_Bool Ny_InitVector(Ny_Vector* vector)
 {
+	vector->buffer = Ny_Calloc(Ny_MIN_VECTOR_CAPACITY, sizeof(void*));
+	vector->capacity = Ny_MIN_VECTOR_CAPACITY;
+	vector->count = 0;
+	return vector;
+}
+
+Ny_Bool Ny_InitVectorSize(Ny_Vector* vector, size_t capacity)
+{
+	Ny_Assert(capacity >= Ny_MIN_VECTOR_CAPACITY);
 	vector->buffer = Ny_Calloc(capacity, sizeof(void*));
 	vector->capacity = capacity;
 	vector->count = 0;

@@ -74,7 +74,8 @@ typedef struct
 
 /* #define Ny_InitVector (vector) ((vector)->buffer = NULL, (vector)->count = 0, (vector)->capacity = 0) */
 
-Ny_Bool Ny_InitVector(Ny_Vector* vector, size_t capacity);
+Ny_Bool Ny_InitVector(Ny_Vector* vector);
+Ny_Bool Ny_InitVectorSize(Ny_Vector* vector, size_t capacity);
 
 Ny_Bool Ny_ResizeVector(Ny_Vector* vector, size_t newcapacity);
 #define Ny_HalfVectorSize(vector) Ny_ResizeVector((vector), (vector)->capacity >> 1)

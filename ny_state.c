@@ -7,7 +7,7 @@
 Ny_State* Ny_CreateState()
 {
 	Ny_State* state = Ny_AllocType(Ny_State);
-	Ny_InitVector(&state->messages, Ny_MIN_VECTOR_CAPACITY);
+	Ny_InitVector(&state->messages);
 	state->tabsize = 4; /* Standard tab size being 4 spaces */
 	return state;
 }
