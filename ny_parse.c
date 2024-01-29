@@ -160,7 +160,7 @@ static void find_next_token_on_indentlevel(
 
 
 
-static Ny_CodeBlock* parse_codeblock(Ny_ParserState* parser, int parent_indentlevel);
+static Ny_CodeBlock* parse_codeblock(Ny_ParserState* parser, int parentline_indentlevel);
 
 
 
@@ -178,7 +178,8 @@ static Ny_Expression* parse_expression(Ny_ParserState* parser)
 
 
 static Ny_Statement* parse_if_statement(
-	Ny_ParserState* parser
+	Ny_ParserState* parser,
+	int parentline_indentlevel
 )
 {
 	Ny_Token* iftoken = get_current_token(parser);
@@ -196,7 +197,7 @@ static Ny_Statement* parse_if_statement(
 	Ny_Token* trueblock_token = get_current_token(parser);
 	if (trueblock_token->indentlevel == -1 || trueblock_token->indentlevel > iftoken->indentlevel)
 	{
-		trueblock = parse_codeblock(parser, iftoken->indentlevel);
+		trueblock = parse_codeblock(parser, iftoken->indentlevel != -1 ? iftoken->indentlevel : parentline_indentlevel);
 		Ny_Token* elsetoken = get_current_token(parser);
 		if (elsetoken && elsetoken->keywordid == Ny_KW_ELSE)
 		{
@@ -217,14 +218,15 @@ static Ny_Statement* parse_if_statement(
 
 
 
-/**
- * @brief Parses a statement
- * @param parser Parser state
- * A higher level than this is an error. A lower ends the block and returns NULL.
- * @return A statement pointer on success and the parser->curtoken is set at the token after the statement. NULL if the block should end.
+/*
+** @brief Parses a statement
+** @param parser Parser state
+** @param line_indentlevel The indentlevel of the first token on this line
+** @return A statement pointer on success and the parser->curtoken is set at the token after the statement. NULL if the block should end.
 */
 static Ny_Statement* parse_statement(
-	Ny_ParserState* parser
+	Ny_ParserState* parser,
+	int parentline_indentlevel
 )
 {
 	Ny_Token* token = get_current_token(parser);
@@ -233,7 +235,7 @@ static Ny_Statement* parse_statement(
 	Ny_Statement* stmt = NULL;
 	switch (token->keywordid)
 	{
-	case Ny_KW_IF: stmt = parse_if_statement(parser);
+	case Ny_KW_IF: stmt = parse_if_statement(parser, parentline_indentlevel);
 	default:
 		break;
 	}
@@ -246,23 +248,20 @@ static Ny_Statement* parse_statement(
 /*
 ** @brief 
 ** @param parser 
-** @param parent_indentlevel The previous non -1 indent level
+** @param parentline_indentlevel The indentlevel of the first token on the line of the parent of this block
 ** @return 
 */
 static Ny_CodeBlock* parse_codeblock(
 	Ny_ParserState* parser,
-	int parent_indentlevel
+	int parentline_indentlevel
 )
 {
-	Ny_Assert(parent_indentlevel >= 0);
+	Ny_Assert(parentline_indentlevel != -1);
 	
 	Ny_CodeBlock* block = Ny_AllocType(Ny_CodeBlock);
 	if (!block) return NULL;
-	if (!Ny_InitVector(&block->statements));
-	Ny_Token* block_firsttoken = get_current_token(parser);
-	if (!block_firsttoken) return NULL;
-	int block_indentlevel = block_firsttoken->indentlevel;
-	Ny_Assert(block_indentlevel >= -1);
+	if (!Ny_InitVector(&block->statements)) return NULL;
+	int block_indentlevel = -1;
 
 	printf("<Block> {\n");
 
@@ -271,28 +270,40 @@ static Ny_CodeBlock* parse_codeblock(
 		Ny_Token* token = get_current_token(parser);
 		Ny_Assert(token); /* The while loop already prevents token from being null */
 		
-		/* Based on the indentation, decide if there is an error, to exit the block (break) or continue looping */
+		/* Block indentlevel is -1 until a token is at the start of a new line. 
+		** The block indent level is then set to that if it is valid */
 		if (block_indentlevel == -1)
 		{
-			/* Inline block */
-			//if (token->indentlevel >)
-			if (token->indentlevel != -1) break;
-		} else
+			if (token->firstindent)
+			{
+				Ny_Assert(token->indentlevel >= 0);
+				if (token->indentlevel <= parentline_indentlevel)
+					break; /* Block has ended */
+				else
+					block_indentlevel = token->indentlevel;
+			}
+		}
+
+		/* Decide based on token->indentlevel if there is an error, to break, or to continue */
+		if (token->firstindent)
 		{
-			/* Not inline block */
+			/* Statement on new line so check the indentation */
+			Ny_Assert(block_indentlevel != -1); /* The new block_indentlevel should already be set */
+			if (token->indentlevel < block_indentlevel) break;
+			if (token->indentlevel > block_indentlevel)
+			{
+				syntax_error("Invalid indentation");
+				find_next_token_on_indentlevel(parser, parentline_indentlevel);
+				continue;
+			}
 		}
 		
-
-		Ny_Statement* stmt = parse_statement(parser);
+		Ny_Statement* stmt = parse_statement(parser, block_indentlevel != -1 ? block_indentlevel : parentline_indentlevel);
+		
 		if (!stmt)
-		{
 			find_next_token_on_indentlevel(parser, block_indentlevel);
-			break;
-		}
 		else
-		{
 			Ny_PushBackVector(&block->statements, stmt);
-		}
 	}
 
 	printf("} </block>\n");
@@ -319,7 +330,7 @@ Ny_AST* Ny_ParseSourceCode(Ny_State* state, const char* sourcecode)
 	Ny_PrintSourceCodeTokens(&parser);
 
 	clock_t parser_start = clock();
-	Ny_CodeBlock* globalscope_block = parse_codeblock(&parser, 0, 0);
+	Ny_CodeBlock* globalscope_block = parse_codeblock(&parser, -100);
 	clock_t parser_time = clock() - parser_start;
 	
 	if (!globalscope_block) goto fail_0;
