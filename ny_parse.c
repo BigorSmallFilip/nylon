@@ -301,7 +301,7 @@ static Ny_CodeBlock* parse_codeblock(
 		Ny_Statement* stmt = parse_statement(parser, block_indentlevel != -1 ? block_indentlevel : parentline_indentlevel);
 		
 		if (!stmt)
-			find_next_token_on_indentlevel(parser, block_indentlevel);
+			find_next_token_on_indentlevel(parser, parentline_indentlevel);
 		else
 			Ny_PushBackVector(&block->statements, stmt);
 	}
