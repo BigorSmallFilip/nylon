@@ -291,8 +291,8 @@ typedef struct Ny_Token
 	};
 	int linenum;
 	short indentlevel;          /* The indentation of the line of this token if it is the first on the line. -1 if not the first token on the line */
+	Ny_Bool firstindent;        /* For indentation syntax. This does not count semicolons as newlines, unlike lastonline! */
 	Ny_Bool lastonline;         /* If this token is the last on a line. For expressions ending without semicolons */
-	Ny_Bool firstonline;        /* For indentation syntax */
 } Ny_Token;
 
 void Ny_PrintToken(const Ny_Token* token);

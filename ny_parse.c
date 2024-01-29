@@ -169,7 +169,7 @@ static Ny_CodeBlock* parse_codeblock(Ny_ParserState* parser, int parent_indentle
 static Ny_Expression* parse_expression(Ny_ParserState* parser)
 {
 	Ny_Token* token = get_current_token(parser);
-	printf("Parsing expression starting with '"); Ny_PrintToken(token); printf("'\n");
+	//printf("Parsing expression starting with '"); Ny_PrintToken(token); printf("'\n");
 
 	parser->curtoken += 3;
 	return NULL;
@@ -243,31 +243,45 @@ static Ny_Statement* parse_statement(
 
 
 
+/*
+** @brief 
+** @param parser 
+** @param parent_indentlevel The previous non -1 indent level
+** @return 
+*/
 static Ny_CodeBlock* parse_codeblock(
 	Ny_ParserState* parser,
 	int parent_indentlevel
 )
 {
+	Ny_Assert(parent_indentlevel >= 0);
+	
 	Ny_CodeBlock* block = Ny_AllocType(Ny_CodeBlock);
 	if (!block) return NULL;
 	if (!Ny_InitVector(&block->statements));
 	Ny_Token* block_firsttoken = get_current_token(parser);
 	if (!block_firsttoken) return NULL;
 	int block_indentlevel = block_firsttoken->indentlevel;
+	Ny_Assert(block_indentlevel >= -1);
+
+	printf("<Block> {\n");
 
 	while (parser->curtoken < parser->tokens.count)
 	{
 		Ny_Token* token = get_current_token(parser);
-		if (!token) return NULL;
-		if (token->indentlevel > block_indentlevel) /* Higher indentlevel, syntax error */
+		Ny_Assert(token); /* The while loop already prevents token from being null */
+		
+		/* Based on the indentation, decide if there is an error, to exit the block (break) or continue looping */
+		if (block_indentlevel == -1)
 		{
-			syntax_error("Invalid indentation");
-			find_next_token_on_indentlevel(parser, block_indentlevel);
-			continue;
+			/* Inline block */
+			//if (token->indentlevel >)
+			if (token->indentlevel != -1) break;
+		} else
+		{
+			/* Not inline block */
 		}
-		if (token->indentlevel != -1 && token->indentlevel < block_indentlevel) break; /* Lower indentlevel, block has ended */
-		/* The cast to unsigned int is because when block_indentlevel = -1 it overflows. */
-		/* That makes all indentlevels other than -1 end the block */
+		
 
 		Ny_Statement* stmt = parse_statement(parser);
 		if (!stmt)
@@ -280,6 +294,8 @@ static Ny_CodeBlock* parse_codeblock(
 			Ny_PushBackVector(&block->statements, stmt);
 		}
 	}
+
+	printf("} </block>\n");
 	return block;
 }
 

@@ -241,6 +241,7 @@ static Ny_Token* create_token()
 	token->separatorid = Ny_SP_NULL;
 	token->string = NULL;
 	token->lastonline = Ny_FALSE;
+	token->firstindent = Ny_FALSE;
 	token->linenum = -1;
 	token->indentlevel = -1;
 	return token;
@@ -561,6 +562,7 @@ Ny_Bool Ny_TokenizeSourceCode(Ny_ParserState* parser, const char* sourcecode)
 			if (reading_indent)
 			{
 				token->indentlevel = line_indentlevel;
+				token->firstindent = Ny_TRUE;
 				reading_indent = Ny_FALSE;
 			}
 			Ny_PushBackVector(&parser->tokens, token);
@@ -593,10 +595,27 @@ void Ny_PrintSourceCodeTokens(Ny_ParserState* parser)
 	for (int i = 0; i < (int)parser->tokens.count; i++)
 	{
 		Ny_Token* token = parser->tokens.buffer[i];
-		for (int intent = 0; intent < 1 + token->indentlevel; intent++)
+		for (int intent = 0; intent < token->indentlevel; intent++)
 			putchar(' ');
+		if (token->firstindent) printf("\x1B[0;92m");
+		else if (token->lastonline) printf("\x1B[0;94m");
+		else printf("\x1B[0m");
 		Ny_PrintToken(token);
-		putchar(token->lastonline ? '\n' : ' ');
+
+		if (token->lastonline)
+		{
+			Ny_Token* nexttoken = NULL;
+			if (i + 1 < parser->tokens.count) nexttoken = parser->tokens.buffer[i + 1];
+
+			if (!nexttoken || (nexttoken && nexttoken->firstindent))
+			{
+				putchar('\n');
+			}
+			else
+				printf("\x1B[0m" "; ");
+		} else
+			putchar(' ');
+		//putchar(token->lastonline && token->indentlevel == -1 ? '\n' : ' ');
 	}
-	putchar('\n');
+	printf("\x1B[0m" "\n\n");
 }

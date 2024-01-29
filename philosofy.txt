@@ -18,22 +18,6 @@ Ny_Int width, height;
 Ny_GetInt2Tuple(resolution, &width, &height);
 
 
-function testing(something, num: int) {
-	for (i in 10..9) {
-		
-	}
-}
-
-
-
-if (true) {
-	print(1)
-} else {
-	print('ass')
-}
-
-
-
 
 
 
@@ -62,6 +46,12 @@ function find_longest_word(str)
 
 
 
+function secundo()
+	if 5 == 5
+	print('e')
+
+
+
 if 5 == 5 print("5 is 5")
  return
 
@@ -84,3 +74,22 @@ trait NameGetter
 
 thingo = {}
 thingo.impl(AgeGetter)
+
+
+
+
+
+
+
+
+Significant whitespace:
+
+if 5 == 5
+	print(1)
+	if 6 == 6
+		print(2)
+	print(3)
+	if 7 == 7 print(4); print(5)
+
+	return false
+return true
