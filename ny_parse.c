@@ -158,6 +158,19 @@ static void find_next_token_on_indentlevel(
 	//printf(" to EOF\n");
 }
 
+static void find_next_statement(Ny_ParserState* parser)
+{
+	while (++parser->curtoken < parser->tokens.count)
+	{
+		Ny_Token* token = parser->tokens.buffer[parser->curtoken];
+		if (token->lastonline)
+		{
+			parser->curtoken++;
+			return;
+		}
+	}
+}
+
 
 
 static Ny_CodeBlock* parse_codeblock(Ny_ParserState* parser, int parentline_indentlevel);
@@ -230,7 +243,14 @@ static Ny_Statement* parse_statement(
 )
 {
 	Ny_Token* token = get_current_token(parser);
-	printf("Parsing statement starting with '"); Ny_PrintToken(token); printf("'\n");
+	printf("Parsing statement starting with '");
+	Ny_PrintToken(token);
+	if (parser->curtoken + 2 < parser->tokens.count)
+	{
+		Ny_PrintToken(parser->tokens.buffer[parser->curtoken + 1]);
+		Ny_PrintToken(parser->tokens.buffer[parser->curtoken + 2]);
+	}
+	printf("'\n");
 	
 	Ny_Statement* stmt = NULL;
 	switch (token->keywordid)
@@ -293,7 +313,7 @@ static Ny_CodeBlock* parse_codeblock(
 			if (token->indentlevel > block_indentlevel)
 			{
 				syntax_error("Invalid indentation");
-				find_next_token_on_indentlevel(parser, parentline_indentlevel);
+				find_next_statement(parser, parentline_indentlevel);
 				continue;
 			}
 		}
@@ -301,7 +321,7 @@ static Ny_CodeBlock* parse_codeblock(
 		Ny_Statement* stmt = parse_statement(parser, block_indentlevel != -1 ? block_indentlevel : parentline_indentlevel);
 		
 		if (!stmt)
-			find_next_token_on_indentlevel(parser, parentline_indentlevel);
+			find_next_statement(parser, parentline_indentlevel);
 		else
 			Ny_PushBackVector(&block->statements, stmt);
 	}
